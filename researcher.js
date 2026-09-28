@@ -7,16 +7,19 @@
       signOut,
       onAuthStateChanged
     },
-    {
-      getFirestore,
-      doc,
-      getDoc,
-      getDocs,
-      collection,
-      setDoc,
-      serverTimestamp,
-      writeBatch
-    }
+   {
+  getFirestore,
+  doc,
+  getDoc,
+  getDocs,
+  collection,
+  query,
+  orderBy,
+  limit,
+  setDoc,
+  serverTimestamp,
+  writeBatch
+}
   ] = await Promise.all([
     import("https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js"),
     import("https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js"),
@@ -581,6 +584,10 @@
         <button data-tab="codes">
           Respondent Codes
         </button>
+        
+<button data-tab="leaderboards">
+  Leaderboards
+</button>
 
         <button data-tab="export">
           Export Data
@@ -616,20 +623,11 @@
         );
       });
 
-    if (activeTab === "records") {
-      await renderRecords();
-    }
-
-    if (activeTab === "editor") {
-      await renderEditor();
-    }
-
-    if (activeTab === "codes") {
-      await renderCodeManager();
-    }
-
-    if (activeTab === "export") {
-      await renderExport();
+   if (activeTab === "records") renderRecords();
+if (activeTab === "editor") renderEditor();
+if (activeTab === "codes") renderCodeManager();
+if (activeTab === "leaderboards") renderLeaderboards();
+if (activeTab === "export") renderExport();
     }
   }
 
@@ -1476,6 +1474,160 @@
       `;
     }
   }
+
+// =========================================================
+// LEADERBOARDS
+// =========================================================
+
+async function renderLeaderboards() {
+  const container =
+    document.querySelector("#dashboard-content");
+
+  container.innerHTML = `
+    <section class="card editor-section">
+      <div class="eyebrow">
+        Performance
+      </div>
+
+      <h3>
+        Article Leaderboards
+      </h3>
+
+      <p class="small">
+        Top 10 participants for each article, ranked by points.
+      </p>
+
+      <div id="leaderboard-container">
+        <div class="notice">
+          Loading leaderboards...
+        </div>
+      </div>
+    </section>
+  `;
+
+  const articles = [
+    {
+      id: "article1",
+      title: "Article 1"
+    },
+    {
+      id: "article2",
+      title: "Article 2"
+    },
+    {
+      id: "article3",
+      title: "Article 3"
+    }
+  ];
+
+  try {
+    const sections = [];
+
+    for (const article of articles) {
+      const leaderboardQuery = query(
+        collection(
+          db,
+          "leaderboards",
+          article.id,
+          "entries"
+        ),
+        orderBy("points", "desc"),
+        limit(10)
+      );
+
+      const snapshot =
+        await getDocs(leaderboardQuery);
+
+      const rows = snapshot.docs
+        .map((item, index) => {
+          const entry = item.data();
+
+          const rank = index + 1;
+
+          let medal = "";
+
+          if (rank === 1) medal = "🥇";
+          if (rank === 2) medal = "🥈";
+          if (rank === 3) medal = "🥉";
+
+          return `
+            <div
+              class="stat"
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 10px;
+              "
+            >
+
+              <span>
+                <strong>
+                  ${medal}
+                  ${rank}.
+                  ${escapeHTML(
+                    entry.displayName || "Participant"
+                  )}
+                </strong>
+              </span>
+
+              <span>
+                ${Number(
+                  entry.points || 0
+                )} pts
+              </span>
+
+            </div>
+          `;
+        })
+        .join("");
+
+      sections.push(`
+        <div
+          class="card editor-section"
+          style="margin-top: 20px;"
+        >
+
+          <div class="eyebrow">
+            ${article.title}
+          </div>
+
+          <h3>
+            Top 10 Participants
+          </h3>
+
+          ${
+            rows ||
+            `
+              <div class="notice">
+                No completed participants yet.
+              </div>
+            `
+          }
+
+        </div>
+      `);
+    }
+
+    document.querySelector(
+      "#leaderboard-container"
+    ).innerHTML = sections.join("");
+
+  } catch (error) {
+    console.error(
+      "Researcher leaderboard error:",
+      error
+    );
+
+    document.querySelector(
+      "#leaderboard-container"
+    ).innerHTML = `
+      <div class="error">
+        Unable to load the leaderboards.
+      </div>
+    `;
+  }
+}
 
   // =========================================================
   // EXPORT
