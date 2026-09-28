@@ -379,10 +379,11 @@
         session.code
       );
 
-      const responseRef = doc(
-        collection(db, "responses")
-      );
-
+  const responseRef = doc(
+  db,
+  "responses",
+  session.code
+);
       await runTransaction(db, async transaction => {
         const codeSnapshot = await transaction.get(codeRef);
 
