@@ -7,23 +7,29 @@
       signOut,
       onAuthStateChanged
     },
-   {
-  getFirestore,
-  doc,
-  getDoc,
-  getDocs,
-  collection,
-  query,
-  orderBy,
-  limit,
-  setDoc,
-  serverTimestamp,
-  writeBatch
-}
+    {
+      getFirestore,
+      doc,
+      getDoc,
+      getDocs,
+      collection,
+      query,
+      orderBy,
+      limit,
+      setDoc,
+      serverTimestamp,
+      writeBatch
+    }
   ] = await Promise.all([
-    import("https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js"),
-    import("https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js"),
-    import("https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js")
+    import(
+      "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js"
+    ),
+    import(
+      "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js"
+    ),
+    import(
+      "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js"
+    )
   ]);
 
   // =========================================================
@@ -89,7 +95,12 @@
         },
         {
           text: "How many questions belong to each article?",
-          choices: ["Two", "Three", "Five", "Fifteen"],
+          choices: [
+            "Two",
+            "Three",
+            "Five",
+            "Fifteen"
+          ],
           correct: 2
         },
         {
@@ -252,7 +263,10 @@
   }
 
   function articleName(articleId) {
-    return String(articleId).replace("article", "Article ");
+    return String(articleId).replace(
+      "article",
+      "Article "
+    );
   }
 
   function errorBox(message) {
@@ -270,17 +284,26 @@
   function renderLogin(message = "") {
     document.querySelector("#researcher-app").innerHTML = `
       <section class="login-card card">
-        <div class="eyebrow">Restricted researcher area</div>
 
-        <h2>Researcher login</h2>
+        <div class="eyebrow">
+          Restricted researcher area
+        </div>
+
+        <h2>
+          Researcher login
+        </h2>
 
         <p class="small">
           Sign in using your NewsQuest researcher account.
         </p>
 
         <form id="login-form">
+
           <div class="form-group">
-            <label for="login-email">Email</label>
+
+            <label for="login-email">
+              Email
+            </label>
 
             <input
               id="login-email"
@@ -289,10 +312,14 @@
               autocomplete="email"
               placeholder="researcher@example.com"
             >
+
           </div>
 
           <div class="form-group">
-            <label for="login-password">Password</label>
+
+            <label for="login-password">
+              Password
+            </label>
 
             <input
               id="login-password"
@@ -300,48 +327,64 @@
               required
               autocomplete="current-password"
             >
+
           </div>
 
           <div id="login-message">
             ${message}
           </div>
 
-          <button class="primary-btn" type="submit">
+          <button
+            class="primary-btn"
+            type="submit"
+          >
             Log in
           </button>
+
         </form>
+
       </section>
     `;
 
     document
       .querySelector("#login-form")
-      .addEventListener("submit", handleLogin);
+      .addEventListener(
+        "submit",
+        handleLogin
+      );
   }
 
   async function handleLogin(event) {
     event.preventDefault();
 
-    const email = document
-      .querySelector("#login-email")
-      .value
-      .trim();
+    const email =
+      document
+        .querySelector("#login-email")
+        .value
+        .trim();
 
-    const password = document
-      .querySelector("#login-password")
-      .value;
+    const password =
+      document.querySelector(
+        "#login-password"
+      ).value;
 
     const message =
-      document.querySelector("#login-message");
+      document.querySelector(
+        "#login-message"
+      );
 
     try {
       message.innerHTML =
-        noticeBox("Signing in...");
+        noticeBox(
+          "Signing in..."
+        );
 
       await signInWithEmailAndPassword(
         auth,
         email,
         password
       );
+
     } catch (error) {
       console.error(error);
 
@@ -362,10 +405,16 @@
     }
 
     const researcherRef =
-      doc(db, "researchers", user.uid);
+      doc(
+        db,
+        "researchers",
+        user.uid
+      );
 
     const snapshot =
-      await getDoc(researcherRef);
+      await getDoc(
+        researcherRef
+      );
 
     return (
       snapshot.exists() &&
@@ -379,20 +428,37 @@
 
   async function seedInitialData() {
     const articleSnapshot =
-      await getDocs(collection(db, "articles"));
+      await getDocs(
+        collection(
+          db,
+          "articles"
+        )
+      );
 
     const codeSnapshot =
       await getDocs(
-        collection(db, "respondentCodes")
+        collection(
+          db,
+          "respondentCodes"
+        )
       );
 
-    const batch = writeBatch(db);
+    const batch =
+      writeBatch(db);
+
     let changed = false;
 
     if (articleSnapshot.empty) {
-      Object.values(DEFAULT_ARTICLES).forEach(article => {
+      Object.values(
+        DEFAULT_ARTICLES
+      ).forEach(article => {
+
         batch.set(
-          doc(db, "articles", article.articleId),
+          doc(
+            db,
+            "articles",
+            article.articleId
+          ),
           article
         );
 
@@ -415,6 +481,7 @@
 
       defaults.forEach(
         ([code, set, articleId]) => {
+
           batch.set(
             doc(
               db,
@@ -427,7 +494,8 @@
               articleId,
               status: "Available",
               usedAt: null,
-              createdAt: serverTimestamp()
+              createdAt:
+                serverTimestamp()
             }
           );
 
@@ -448,7 +516,8 @@
   async function renderDashboard(
     activeTab = "records"
   ) {
-    const user = auth.currentUser;
+    const user =
+      auth.currentUser;
 
     if (!user) {
       renderLogin();
@@ -459,7 +528,9 @@
 
     try {
       researcher =
-        await isResearcher(user);
+        await isResearcher(
+          user
+        );
     } catch (error) {
       console.error(error);
     }
@@ -469,11 +540,14 @@
         "#researcher-app"
       ).innerHTML = `
         <section class="login-card card">
+
           <div class="eyebrow">
             Researcher access
           </div>
 
-          <h2>Access not configured</h2>
+          <h2>
+            Access not configured
+          </h2>
 
           <p class="small">
             Your Firebase account is authenticated,
@@ -493,11 +567,14 @@
           >
             Log out
           </button>
+
         </section>
       `;
 
       document
-        .querySelector("#logout-unconfigured")
+        .querySelector(
+          "#logout-unconfigured"
+        )
         .addEventListener(
           "click",
           () => signOut(auth)
@@ -508,6 +585,7 @@
 
     try {
       await seedInitialData();
+
     } catch (error) {
       console.error(error);
 
@@ -515,7 +593,10 @@
         "#researcher-app"
       ).innerHTML = `
         <section class="login-card card">
-          <h2>Database access error</h2>
+
+          <h2>
+            Database access error
+          </h2>
 
           <p class="small">
             Authentication worked, but Firestore
@@ -524,8 +605,7 @@
           </p>
 
           <div class="error">
-            We will fix the Firestore security rules
-            in the next setup step.
+            Please check the Firestore security rules.
           </div>
 
           <button
@@ -534,11 +614,14 @@
           >
             Log out
           </button>
+
         </section>
       `;
 
       document
-        .querySelector("#logout-db-error")
+        .querySelector(
+          "#logout-db-error"
+        )
         .addEventListener(
           "click",
           () => signOut(auth)
@@ -551,16 +634,23 @@
       "#researcher-app"
     ).innerHTML = `
       <div class="dashboard-header">
+
         <div>
+
           <div class="eyebrow">
             Authenticated researcher area
           </div>
 
-          <h2>Research dashboard</h2>
+          <h2>
+            Research dashboard
+          </h2>
 
           <p class="small">
-            ${escapeHTML(user.email || "")}
+            ${escapeHTML(
+              user.email || ""
+            )}
           </p>
+
         </div>
 
         <button
@@ -569,6 +659,7 @@
         >
           Log out
         </button>
+
       </div>
 
       <nav class="dashboard-nav">
@@ -581,17 +672,17 @@
           Article/Quiz Editor
         </button>
 
-       <button data-tab="codes">
-  Respondent Codes
-</button>
+        <button data-tab="codes">
+          Respondent Codes
+        </button>
 
-<button data-tab="leaderboards">
-  Leaderboards
-</button>
+        <button data-tab="leaderboards">
+          Leaderboards
+        </button>
 
-<button data-tab="export">
-  Export Data
-</button>
+        <button data-tab="export">
+          Export Data
+        </button>
 
       </nav>
 
@@ -599,18 +690,24 @@
     `;
 
     document
-      .querySelector("#logout")
+      .querySelector(
+        "#logout"
+      )
       .addEventListener(
         "click",
         () => signOut(auth)
       );
 
     document
-      .querySelectorAll("[data-tab]")
+      .querySelectorAll(
+        "[data-tab]"
+      )
       .forEach(button => {
+
         button.classList.toggle(
           "active",
-          button.dataset.tab === activeTab
+          button.dataset.tab ===
+            activeTab
         );
 
         button.addEventListener(
@@ -621,13 +718,37 @@
             );
           }
         );
+
       });
 
-   if (activeTab === "records") renderRecords();
-if (activeTab === "editor") renderEditor();
-if (activeTab === "codes") renderCodeManager();
-if (activeTab === "leaderboards") renderLeaderboards();
-if (activeTab === "export") renderExport();
+    if (
+      activeTab === "records"
+    ) {
+      renderRecords();
+    }
+
+    if (
+      activeTab === "editor"
+    ) {
+      renderEditor();
+    }
+
+    if (
+      activeTab === "codes"
+    ) {
+      renderCodeManager();
+    }
+
+    if (
+      activeTab === "leaderboards"
+    ) {
+      renderLeaderboards();
+    }
+
+    if (
+      activeTab === "export"
+    ) {
+      renderExport();
     }
   }
 
@@ -643,7 +764,10 @@ if (activeTab === "export") renderExport();
 
     container.innerHTML = `
       <section class="card editor-section">
-        <h3>Respondent records</h3>
+
+        <h3>
+          Respondent records
+        </h3>
 
         <p class="small">
           Completed respondents are stored in Firestore.
@@ -652,13 +776,17 @@ if (activeTab === "export") renderExport();
         <div class="notice">
           Loading records...
         </div>
+
       </section>
     `;
 
     try {
       const snapshot =
         await getDocs(
-          collection(db, "responses")
+          collection(
+            db,
+            "responses"
+          )
         );
 
       const records =
@@ -668,100 +796,117 @@ if (activeTab === "export") renderExport();
             ...item.data()
           }))
           .sort((a, b) => {
+
             const aTime =
-              a.submittedAt?.toMillis?.() || 0;
+              a.submittedAt?.toMillis?.() ||
+              0;
 
             const bTime =
-              b.submittedAt?.toMillis?.() || 0;
+              b.submittedAt?.toMillis?.() ||
+              0;
 
             return bTime - aTime;
           });
 
       const rows =
-        records.map(response => {
+        records
+          .map(response => {
 
-          const date =
-            response.submittedAt?.toDate
-              ? response.submittedAt.toDate()
-              : null;
+            const date =
+              response.submittedAt?.toDate
+                ? response.submittedAt.toDate()
+                : null;
 
-          return `
-            <tr>
-              <td>
-                ${escapeHTML(
-                  response.respondentCode || ""
-                )}
-              </td>
+            return `
+              <tr>
 
-              <td>
-                Set ${escapeHTML(
-                  response.set || ""
-                )}
-              </td>
-
-              <td>
-                ${escapeHTML(
-                  articleName(
-                    response.articleId || ""
-                  )
-                )}
-              </td>
-
-              <td>
-                ${Number(
-                  response.score || 0
-                )}/5
-              </td>
-
-              <td>
-                ${Number(
-                  response.percentage || 0
-                )}%
-              </td>
-
-              <td>
-                ${Number(
-                  response.points || 0
-                )}
-              </td>
-
-              <td>
-                ${date
-                  ? date.toLocaleDateString()
-                  : ""}
-              </td>
-
-              <td>
-                ${date
-                  ? date.toLocaleTimeString()
-                  : ""}
-              </td>
-
-              <td>
-                <span class="status used">
+                <td>
                   ${escapeHTML(
-                    response.status ||
-                    "Completed"
+                    response.respondentCode || ""
                   )}
-                </span>
-              </td>
-            </tr>
-          `;
-        }).join("");
+                </td>
+
+                <td>
+                  Set ${escapeHTML(
+                    response.set || ""
+                  )}
+                </td>
+
+                <td>
+                  ${escapeHTML(
+                    articleName(
+                      response.articleId || ""
+                    )
+                  )}
+                </td>
+
+                <td>
+                  ${Number(
+                    response.score || 0
+                  )}/5
+                </td>
+
+                <td>
+                  ${Number(
+                    response.percentage || 0
+                  )}%
+                </td>
+
+                <td>
+                  ${Number(
+                    response.points || 0
+                  )}
+                </td>
+
+                <td>
+                  ${
+                    date
+                      ? date.toLocaleDateString()
+                      : ""
+                  }
+                </td>
+
+                <td>
+                  ${
+                    date
+                      ? date.toLocaleTimeString()
+                      : ""
+                  }
+                </td>
+
+                <td>
+
+                  <span class="status used">
+                    ${escapeHTML(
+                      response.status ||
+                        "Completed"
+                    )}
+                  </span>
+
+                </td>
+
+              </tr>
+            `;
+          })
+          .join("");
 
       container.innerHTML = `
         <section class="card editor-section">
 
-          <h3>Respondent records</h3>
+          <h3>
+            Respondent records
+          </h3>
 
           <p class="small">
             All completed respondents are shown in one place.
           </p>
 
           <div class="table-wrap">
+
             <table>
 
               <thead>
+
                 <tr>
                   <th>Respondent Code</th>
                   <th>Set</th>
@@ -773,9 +918,11 @@ if (activeTab === "export") renderExport();
                   <th>Time</th>
                   <th>Status</th>
                 </tr>
+
               </thead>
 
               <tbody>
+
                 ${
                   rows ||
                   `
@@ -786,23 +933,30 @@ if (activeTab === "export") renderExport();
                     </tr>
                   `
                 }
+
               </tbody>
 
             </table>
+
           </div>
 
         </section>
       `;
+
     } catch (error) {
       console.error(error);
 
       container.innerHTML = `
         <section class="card editor-section">
-          <h3>Respondent records</h3>
+
+          <h3>
+            Respondent records
+          </h3>
 
           <div class="error">
             Unable to load respondent records.
           </div>
+
         </section>
       `;
     }
@@ -820,228 +974,266 @@ if (activeTab === "export") renderExport();
 
     container.innerHTML = `
       <section class="card editor-section">
-        <h3>Article and quiz editor</h3>
+
+        <h3>
+          Article and quiz editor
+        </h3>
 
         <div class="notice">
           Loading articles...
         </div>
+
       </section>
     `;
 
     try {
       const snapshot =
         await getDocs(
-          collection(db, "articles")
+          collection(
+            db,
+            "articles"
+          )
         );
 
       const data = {};
 
-      snapshot.docs.forEach(item => {
-        data[item.id] = {
-          articleId: item.id,
-          ...item.data()
-        };
-      });
+      snapshot.docs.forEach(
+        item => {
+          data[item.id] = {
+            articleId: item.id,
+            ...item.data()
+          };
+        }
+      );
 
       container.innerHTML =
-        Object.keys(SET_ARTICLES)
-          .map(setNumber => {
+        Object.keys(
+          SET_ARTICLES
+        )
+          .map(
+            setNumber => {
 
-            const articleId =
-              SET_ARTICLES[setNumber];
+              const articleId =
+                SET_ARTICLES[
+                  setNumber
+                ];
 
-            const article =
-              data[articleId] ||
-              DEFAULT_ARTICLES[articleId];
-
-            return `
-              <form
-                class="card editor-section article-editor"
-                data-article-id="${escapeAttr(
+              const article =
+                data[articleId] ||
+                DEFAULT_ARTICLES[
                   articleId
-                )}"
-              >
+                ];
 
-                <div class="eyebrow">
-                  Set ${setNumber}
-                </div>
+              return `
+                <form
+                  class="card editor-section article-editor"
+                  data-article-id="${escapeAttr(
+                    articleId
+                  )}"
+                >
 
-                <h3>
-                  ${escapeHTML(
-                    articleName(articleId)
-                  )}
-                </h3>
+                  <div class="eyebrow">
+                    Set ${setNumber}
+                  </div>
 
-                <div class="form-group">
-                  <label>Title</label>
+                  <h3>
+                    ${escapeHTML(
+                      articleName(
+                        articleId
+                      )
+                    )}
+                  </h3>
 
-                  <input
-                    name="title"
-                    required
-                    value="${escapeAttr(
-                      article.title
-                    )}"
-                  >
-                </div>
+                  <div class="form-group">
 
-                <div class="form-group">
-                  <label>Image URL</label>
+                    <label>
+                      Title
+                    </label>
 
-                  <input
-                    name="image"
-                    required
-                    value="${escapeAttr(
-                      article.image
-                    )}"
-                  >
-                </div>
+                    <input
+                      name="title"
+                      required
+                      value="${escapeAttr(
+                        article.title
+                      )}"
+                    >
 
-                <div class="form-group">
-                  <label>Article body</label>
+                  </div>
 
-                  <textarea
-                    name="body"
-                    required
-                  >${escapeHTML(
-                    article.body
-                  )}</textarea>
-                </div>
+                  <div class="form-group">
 
-                <h3>
-                  Exactly five questions
-                </h3>
+                    <label>
+                      Image URL
+                    </label>
 
-                ${Array.from(
-                  { length: 5 },
-                  (_, index) => {
+                    <input
+                      name="image"
+                      required
+                      value="${escapeAttr(
+                        article.image
+                      )}"
+                    >
 
-                    const question =
-                      article.questions?.[index] ||
-                      {
-                        text: "",
-                        choices: [
-                          "",
-                          "",
-                          "",
-                          ""
-                        ],
-                        correct: 0
-                      };
+                  </div>
 
-                    return `
-                      <div class="editor-question">
+                  <div class="form-group">
 
-                        <strong>
-                          Question ${index + 1}
-                        </strong>
+                    <label>
+                      Article body
+                    </label>
 
-                        <div class="form-group">
-                          <label>
-                            Question text
-                          </label>
+                    <textarea
+                      name="body"
+                      required
+                    >${escapeHTML(
+                      article.body
+                    )}</textarea>
 
-                          <input
-                            name="q${index}_text"
-                            required
-                            value="${escapeAttr(
-                              question.text
-                            )}"
-                          >
-                        </div>
+                  </div>
 
-                        <div
-                          class="editor-question-grid"
-                        >
+                  <h3>
+                    Exactly five questions
+                  </h3>
 
-                          ${Array.from(
-                            { length: 4 },
-                            (_, choiceIndex) => `
-                              <div class="form-group">
+                  ${Array.from(
+                    { length: 5 },
+                    (_, index) => {
 
-                                <label>
-                                  Choice ${
-                                    choiceIndex + 1
-                                  }
-                                </label>
+                      const question =
+                        article.questions?.[
+                          index
+                        ] || {
+                          text: "",
+                          choices: [
+                            "",
+                            "",
+                            "",
+                            ""
+                          ],
+                          correct: 0
+                        };
 
-                                <input
-                                  name="q${index}_choice${choiceIndex}"
-                                  required
-                                  value="${escapeAttr(
-                                    question.choices?.[
-                                      choiceIndex
-                                    ] || ""
-                                  )}"
-                                >
+                      return `
+                        <div class="editor-question">
 
-                              </div>
-                            `
-                          ).join("")}
+                          <strong>
+                            Question ${index + 1}
+                          </strong>
 
-                        </div>
+                          <div class="form-group">
 
-                        <div class="form-group">
+                            <label>
+                              Question text
+                            </label>
 
-                          <label>
-                            Correct answer
-                          </label>
+                            <input
+                              name="q${index}_text"
+                              required
+                              value="${escapeAttr(
+                                question.text
+                              )}"
+                            >
 
-                          <select
-                            name="q${index}_correct"
+                          </div>
+
+                          <div
+                            class="editor-question-grid"
                           >
 
                             ${Array.from(
                               { length: 4 },
                               (_, choiceIndex) => `
-                                <option
-                                  value="${choiceIndex}"
-                                  ${
-                                    choiceIndex ===
-                                    Number(
-                                      question.correct
-                                    )
-                                      ? "selected"
-                                      : ""
-                                  }
-                                >
-                                  Choice ${
-                                    choiceIndex + 1
-                                  }
-                                </option>
+                                <div class="form-group">
+
+                                  <label>
+                                    Choice ${
+                                      choiceIndex + 1
+                                    }
+                                  </label>
+
+                                  <input
+                                    name="q${index}_choice${choiceIndex}"
+                                    required
+                                    value="${escapeAttr(
+                                      question.choices?.[
+                                        choiceIndex
+                                      ] || ""
+                                    )}"
+                                  >
+
+                                </div>
                               `
                             ).join("")}
 
-                          </select>
+                          </div>
+
+                          <div class="form-group">
+
+                            <label>
+                              Correct answer
+                            </label>
+
+                            <select
+                              name="q${index}_correct"
+                            >
+
+                              ${Array.from(
+                                { length: 4 },
+                                (_, choiceIndex) => `
+                                  <option
+                                    value="${choiceIndex}"
+                                    ${
+                                      choiceIndex ===
+                                      Number(
+                                        question.correct
+                                      )
+                                        ? "selected"
+                                        : ""
+                                    }
+                                  >
+                                    Choice ${
+                                      choiceIndex + 1
+                                    }
+                                  </option>
+                                `
+                              ).join("")}
+
+                            </select>
+
+                          </div>
 
                         </div>
+                      `;
+                    }
+                  ).join("")}
 
-                      </div>
-                    `;
-                  }
-                ).join("")}
+                  <div class="action-row">
 
-                <div class="action-row">
+                    <button
+                      class="primary-btn"
+                      type="submit"
+                    >
+                      Save ${escapeHTML(
+                        articleName(
+                          articleId
+                        )
+                      )}
+                    </button>
 
-                  <button
-                    class="primary-btn"
-                    type="submit"
-                  >
-                    Save ${escapeHTML(
-                      articleName(articleId)
-                    )}
-                  </button>
+                  </div>
 
-                </div>
+                  <div class="save-message"></div>
 
-                <div class="save-message"></div>
-
-              </form>
-            `;
-          })
+                </form>
+              `;
+            }
+          )
           .join("");
 
       document
-        .querySelectorAll(".article-editor")
+        .querySelectorAll(
+          ".article-editor"
+        )
         .forEach(form => {
 
           form.addEventListener(
@@ -1061,9 +1253,11 @@ if (activeTab === "export") renderExport();
 
       container.innerHTML = `
         <section class="card editor-section">
+
           <div class="error">
             Unable to load the article editor.
           </div>
+
         </section>
       `;
     }
@@ -1090,6 +1284,7 @@ if (activeTab === "export") renderExport();
       Array.from(
         { length: 5 },
         (_, index) => ({
+
           text:
             String(
               formData.get(
@@ -1114,6 +1309,7 @@ if (activeTab === "export") renderExport();
                 `q${index}_correct`
               )
             )
+
         })
       );
 
@@ -1123,7 +1319,8 @@ if (activeTab === "export") renderExport();
           !question.text ||
           question.choices.length !== 4 ||
           question.choices.some(
-            choice => !choice
+            choice =>
+              !choice
           )
       );
 
@@ -1132,10 +1329,12 @@ if (activeTab === "export") renderExport();
         errorBox(
           "Every question needs four choices."
         );
+
       return;
     }
 
     try {
+
       await setDoc(
         doc(
           db,
@@ -1144,15 +1343,28 @@ if (activeTab === "export") renderExport();
         ),
         {
           articleId,
-          title: String(
-            formData.get("title") || ""
-          ).trim(),
-          image: String(
-            formData.get("image") || ""
-          ).trim(),
-          body: String(
-            formData.get("body") || ""
-          ).trim(),
+
+          title:
+            String(
+              formData.get(
+                "title"
+              ) || ""
+            ).trim(),
+
+          image:
+            String(
+              formData.get(
+                "image"
+              ) || ""
+            ).trim(),
+
+          body:
+            String(
+              formData.get(
+                "body"
+              ) || ""
+            ).trim(),
+
           questions
         }
       );
@@ -1161,7 +1373,9 @@ if (activeTab === "export") renderExport();
         noticeBox(
           "Saved successfully."
         );
+
     } catch (error) {
+
       console.error(error);
 
       message.innerHTML =
@@ -1176,6 +1390,7 @@ if (activeTab === "export") renderExport();
   // =========================================================
 
   async function renderCodeManager() {
+
     const container =
       document.querySelector(
         "#dashboard-content"
@@ -1261,20 +1476,24 @@ if (activeTab === "export") renderExport();
           <table>
 
             <thead>
+
               <tr>
                 <th>Code</th>
                 <th>Set</th>
                 <th>Article</th>
                 <th>Status</th>
               </tr>
+
             </thead>
 
             <tbody id="code-table">
+
               <tr>
                 <td colspan="4">
                   Loading codes...
                 </td>
               </tr>
+
             </tbody>
 
           </table>
@@ -1306,7 +1525,9 @@ if (activeTab === "export") renderExport();
 
     const code =
       document
-        .querySelector("#new-code")
+        .querySelector(
+          "#new-code"
+        )
         .value
         .trim()
         .toUpperCase();
@@ -1319,12 +1540,15 @@ if (activeTab === "export") renderExport();
       );
 
     if (
-      !/^SET[1-3]-[A-Z0-9]+$/.test(code)
+      !/^SET[1-3]-[A-Z0-9]+$/.test(
+        code
+      )
     ) {
       message.innerHTML =
         errorBox(
           "Use a format like SET1-004."
         );
+
       return;
     }
 
@@ -1336,6 +1560,7 @@ if (activeTab === "export") renderExport();
       );
 
     try {
+
       const existing =
         await getDoc(ref);
 
@@ -1344,19 +1569,31 @@ if (activeTab === "export") renderExport();
           errorBox(
             "That respondent code already exists."
           );
+
         return;
       }
 
-      await setDoc(ref, {
-        code,
-        set,
-        articleId:
-          SET_ARTICLES[set],
-        status: "Available",
-        usedAt: null,
-        createdAt:
-          serverTimestamp()
-      });
+      await setDoc(
+        ref,
+        {
+          code,
+          set,
+
+          articleId:
+            SET_ARTICLES[
+              set
+            ],
+
+          status:
+            "Available",
+
+          usedAt:
+            null,
+
+          createdAt:
+            serverTimestamp()
+        }
+      );
 
       message.innerHTML =
         noticeBox(
@@ -1368,6 +1605,7 @@ if (activeTab === "export") renderExport();
       await drawCodeTable();
 
     } catch (error) {
+
       console.error(error);
 
       message.innerHTML =
@@ -1378,6 +1616,7 @@ if (activeTab === "export") renderExport();
   }
 
   async function drawCodeTable() {
+
     const table =
       document.querySelector(
         "#code-table"
@@ -1388,6 +1627,7 @@ if (activeTab === "export") renderExport();
     }
 
     try {
+
       const snapshot =
         await getDocs(
           collection(
@@ -1406,7 +1646,9 @@ if (activeTab === "export") renderExport();
             String(
               a.code
             ).localeCompare(
-              String(b.code)
+              String(
+                b.code
+              )
             )
           )
           .map(code => `
@@ -1436,7 +1678,8 @@ if (activeTab === "export") renderExport();
 
                 <span
                   class="status ${
-                    code.status === "Used"
+                    code.status ===
+                    "Used"
                       ? "used"
                       : "available"
                   }"
@@ -1463,6 +1706,7 @@ if (activeTab === "export") renderExport();
         `;
 
     } catch (error) {
+
       console.error(error);
 
       table.innerHTML = `
@@ -1475,165 +1719,217 @@ if (activeTab === "export") renderExport();
     }
   }
 
-// =========================================================
-// LEADERBOARDS
-// =========================================================
+  // =========================================================
+  // LEADERBOARDS
+  // =========================================================
 
-async function renderLeaderboards() {
-  const container =
-    document.querySelector("#dashboard-content");
+  async function renderLeaderboards() {
 
-  container.innerHTML = `
-    <section class="card editor-section">
-      <div class="eyebrow">
-        Performance
-      </div>
-
-      <h3>
-        Article Leaderboards
-      </h3>
-
-      <p class="small">
-        Top 10 participants for each article, ranked by points.
-      </p>
-
-      <div id="leaderboard-container">
-        <div class="notice">
-          Loading leaderboards...
-        </div>
-      </div>
-    </section>
-  `;
-
-  const articles = [
-    {
-      id: "article1",
-      title: "Article 1"
-    },
-    {
-      id: "article2",
-      title: "Article 2"
-    },
-    {
-      id: "article3",
-      title: "Article 3"
-    }
-  ];
-
-  try {
-    const sections = [];
-
-    for (const article of articles) {
-      const leaderboardQuery = query(
-        collection(
-          db,
-          "leaderboards",
-          article.id,
-          "entries"
-        ),
-        orderBy("points", "desc"),
-        limit(10)
+    const container =
+      document.querySelector(
+        "#dashboard-content"
       );
 
-      const snapshot =
-        await getDocs(leaderboardQuery);
-
-      const rows = snapshot.docs
-        .map((item, index) => {
-          const entry = item.data();
-
-          const rank = index + 1;
-
-          let medal = "";
-
-          if (rank === 1) medal = "🥇";
-          if (rank === 2) medal = "🥈";
-          if (rank === 3) medal = "🥉";
-
-          return `
-            <div
-              class="stat"
-              style="
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                margin-bottom: 10px;
-              "
-            >
-
-              <span>
-                <strong>
-                  ${medal}
-                  ${rank}.
-                  ${escapeHTML(
-                    entry.displayName || "Participant"
-                  )}
-                </strong>
-              </span>
-
-              <span>
-                ${Number(
-                  entry.points || 0
-                )} pts
-              </span>
-
-            </div>
-          `;
-        })
-        .join("");
-
-      sections.push(`
-        <div
-          class="card editor-section"
-          style="margin-top: 20px;"
-        >
-
-          <div class="eyebrow">
-            ${article.title}
-          </div>
-
-          <h3>
-            Top 10 Participants
-          </h3>
-
-          ${
-            rows ||
-            `
-              <div class="notice">
-                No completed participants yet.
-              </div>
-            `
-          }
-
-        </div>
-      `);
+    if (!container) {
+      return;
     }
 
-    document.querySelector(
-      "#leaderboard-container"
-    ).innerHTML = sections.join("");
+    container.innerHTML = `
+      <section class="card editor-section">
 
-  } catch (error) {
-    console.error(
-      "Researcher leaderboard error:",
-      error
-    );
+        <div class="eyebrow">
+          Performance
+        </div>
 
-    document.querySelector(
-      "#leaderboard-container"
-    ).innerHTML = `
-      <div class="error">
-        Unable to load the leaderboards.
-      </div>
+        <h3>
+          Article Leaderboards
+        </h3>
+
+        <p class="small">
+          Top 10 participants for each article,
+          ranked by points.
+        </p>
+
+        <div id="leaderboard-container">
+
+          <div class="notice">
+            Loading leaderboards...
+          </div>
+
+        </div>
+
+      </section>
     `;
+
+    const articles = [
+      {
+        id: "article1",
+        title: "Article 1"
+      },
+      {
+        id: "article2",
+        title: "Article 2"
+      },
+      {
+        id: "article3",
+        title: "Article 3"
+      }
+    ];
+
+    try {
+
+      const sections = [];
+
+      for (
+        const article of articles
+      ) {
+
+        const leaderboardQuery =
+          query(
+            collection(
+              db,
+              "leaderboards",
+              article.id,
+              "entries"
+            ),
+            orderBy(
+              "points",
+              "desc"
+            ),
+            limit(10)
+          );
+
+        const snapshot =
+          await getDocs(
+            leaderboardQuery
+          );
+
+        const rows =
+          snapshot.docs
+            .map(
+              (item, index) => {
+
+                const entry =
+                  item.data();
+
+                const rank =
+                  index + 1;
+
+                let medal = "";
+
+                if (
+                  rank === 1
+                ) {
+                  medal = "🥇";
+                }
+
+                if (
+                  rank === 2
+                ) {
+                  medal = "🥈";
+                }
+
+                if (
+                  rank === 3
+                ) {
+                  medal = "🥉";
+                }
+
+                return `
+                  <div
+                    class="stat"
+                    style="
+                      display: flex;
+                      justify-content: space-between;
+                      align-items: center;
+                      margin-bottom: 10px;
+                    "
+                  >
+
+                    <span>
+
+                      <strong>
+                        ${medal}
+                        ${rank}.
+                        ${escapeHTML(
+                          entry.displayName ||
+                            "Participant"
+                        )}
+                      </strong>
+
+                    </span>
+
+                    <span>
+                      ${Number(
+                        entry.points || 0
+                      )} pts
+                    </span>
+
+                  </div>
+                `;
+              }
+            )
+            .join("");
+
+        sections.push(`
+          <div
+            class="card editor-section"
+            style="
+              margin-top: 20px;
+            "
+          >
+
+            <div class="eyebrow">
+              ${escapeHTML(
+                article.title
+              )}
+            </div>
+
+            <h3>
+              Top 10 Participants
+            </h3>
+
+            ${
+              rows ||
+              `
+                <div class="notice">
+                  No completed participants yet.
+                </div>
+              `
+            }
+
+          </div>
+        `);
+      }
+
+      document.querySelector(
+        "#leaderboard-container"
+      ).innerHTML =
+        sections.join("");
+
+    } catch (error) {
+
+      console.error(
+        "Researcher leaderboard error:",
+        error
+      );
+
+      document.querySelector(
+        "#leaderboard-container"
+      ).innerHTML = `
+        <div class="error">
+          Unable to load the leaderboards.
+        </div>
+      `;
+    }
   }
-}
 
   // =========================================================
   // EXPORT
   // =========================================================
 
   async function renderExport() {
+
     document.querySelector(
       "#dashboard-content"
     ).innerHTML = `
@@ -1659,7 +1955,9 @@ async function renderLeaderboards() {
     `;
 
     document
-      .querySelector("#export-csv")
+      .querySelector(
+        "#export-csv"
+      )
       .addEventListener(
         "click",
         exportCSV
@@ -1667,7 +1965,9 @@ async function renderLeaderboards() {
   }
 
   async function exportCSV() {
+
     try {
+
       const snapshot =
         await getDocs(
           collection(
@@ -1689,46 +1989,54 @@ async function renderLeaderboards() {
         "Status"
       ];
 
-      const lines = [headers];
+      const lines = [
+        headers
+      ];
 
-      snapshot.docs.forEach(item => {
+      snapshot.docs.forEach(
+        item => {
 
-        const response =
-          item.data();
+          const response =
+            item.data();
 
-        const date =
-          response.submittedAt?.toDate
-            ? response.submittedAt.toDate()
-            : new Date();
+          const date =
+            response.submittedAt?.toDate
+              ? response.submittedAt.toDate()
+              : new Date();
 
-        lines.push([
-          response.respondentCode || "",
-          `Set ${response.set || ""}`,
-          articleName(
-            response.articleId || ""
-          ),
-          response.score ?? "",
-          response.totalQuestions ?? 5,
-          `${response.percentage ?? 0}%`,
-          response.points ?? 0,
-          date.toLocaleDateString(),
-          date.toLocaleTimeString(),
-          response.status || "Completed"
-        ]);
-      });
+          lines.push([
+            response.respondentCode || "",
+            `Set ${response.set || ""}`,
+            articleName(
+              response.articleId || ""
+            ),
+            response.score ?? "",
+            response.totalQuestions ?? 5,
+            `${response.percentage ?? 0}%`,
+            response.points ?? 0,
+            date.toLocaleDateString(),
+            date.toLocaleTimeString(),
+            response.status ||
+              "Completed"
+          ]);
+        }
+      );
 
       const csv =
         lines
-          .map(row =>
-            row
-              .map(value =>
-                `"${String(value)
-                  .replaceAll(
-                    '"',
-                    '""'
-                  )}"`
-              )
-              .join(",")
+          .map(
+            row =>
+              row
+                .map(
+                  value =>
+                    `"${String(
+                      value
+                    ).replaceAll(
+                      '"',
+                      '""'
+                    )}"`
+                )
+                .join(",")
           )
           .join("\n");
 
@@ -1752,6 +2060,7 @@ async function renderLeaderboards() {
         );
 
       link.href = url;
+
       link.download =
         "newsquest-responses.csv";
 
@@ -1768,6 +2077,7 @@ async function renderLeaderboards() {
       );
 
     } catch (error) {
+
       console.error(error);
 
       alert(
@@ -1794,4 +2104,5 @@ async function renderLeaderboards() {
       );
     }
   );
+
 })();
