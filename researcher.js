@@ -581,17 +581,17 @@
           Article/Quiz Editor
         </button>
 
-        <button data-tab="codes">
-          Respondent Codes
-        </button>
-        
+       <button data-tab="codes">
+  Respondent Codes
+</button>
+
 <button data-tab="leaderboards">
   Leaderboards
 </button>
 
-        <button data-tab="export">
-          Export Data
-        </button>
+<button data-tab="export">
+  Export Data
+</button>
 
       </nav>
 
