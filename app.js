@@ -398,35 +398,41 @@
 
 const participantNumber =
   session.code.split("-")[1] || "000";
-      await runTransaction(db, async transaction => {
-        const codeSnapshot = await transaction.get(codeRef);
+    await runTransaction(db, async transaction => {
+  const codeSnapshot = await transaction.get(codeRef);
 
-        if (!codeSnapshot.exists()) {
-          throw new Error("CODE_NOT_FOUND");
-        }
+  if (!codeSnapshot.exists()) {
+    throw new Error("CODE_NOT_FOUND");
+  }
 
-        const currentCode = codeSnapshot.data();
+  const currentCode = codeSnapshot.data();
 
-        if (currentCode.status === "Used") {
-          throw new Error("CODE_ALREADY_USED");
-        }
+  if (currentCode.status === "Used") {
+    throw new Error("CODE_ALREADY_USED");
+  }
 
-        transaction.update(codeRef, {
-          status: "Used",
-          usedAt: serverTimestamp()
-        });
+  transaction.update(codeRef, {
+    status: "Used",
+    usedAt: serverTimestamp()
+  });
 
-        transaction.set(responseRef, responseData);
-      });
-transaction.set(leaderboardRef, {
-  articleId: session.articleId,
-  set: session.set,
-  displayName: `Participant ${participantNumber}`,
-  points: responseData.points,
-  score: responseData.score,
-  createdAt: serverTimestamp()
+  transaction.set(responseRef, responseData);
+
+  transaction.set(leaderboardRef, {
+    articleId: session.articleId,
+    set: session.set,
+    displayName: `Participant ${participantNumber}`,
+    points: responseData.points,
+    score: responseData.score,
+    respondentCode: session.code,
+    createdAt: serverTimestamp()
+  });
 });
-      renderResult({
+
+await renderResult({
+  ...responseData,
+  submittedAt: new Date().toISOString()
+});
         ...responseData,
         submittedAt: new Date().toISOString()
       });
