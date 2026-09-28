@@ -2,13 +2,17 @@
   const [
     { initializeApp },
     {
-      getFirestore,
-      doc,
-      getDoc,
-      collection,
-      runTransaction,
-      serverTimestamp
-    }
+  getFirestore,
+  doc,
+  getDoc,
+  getDocs,
+  collection,
+  query,
+  orderBy,
+  limit,
+  runTransaction,
+  serverTimestamp
+}
   ] = await Promise.all([
     import("https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js"),
     import("https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js")
@@ -384,6 +388,16 @@
   "responses",
   session.code
 );
+      const leaderboardRef = doc(
+  db,
+  "leaderboards",
+  session.articleId,
+  "entries",
+  session.code
+);
+
+const participantNumber =
+  session.code.split("-")[1] || "000";
       await runTransaction(db, async transaction => {
         const codeSnapshot = await transaction.get(codeRef);
 
@@ -404,7 +418,14 @@
 
         transaction.set(responseRef, responseData);
       });
-
+transaction.set(leaderboardRef, {
+  articleId: session.articleId,
+  set: session.set,
+  displayName: `Participant ${participantNumber}`,
+  points: responseData.points,
+  score: responseData.score,
+  createdAt: serverTimestamp()
+});
       renderResult({
         ...responseData,
         submittedAt: new Date().toISOString()
@@ -432,45 +453,124 @@
     }
   }
 
-  function renderResult(response) {
-    document.querySelector("#app").innerHTML = `
-      <section class="result-card card">
-        <div class="eyebrow">Completed</div>
+ async function renderResult(response) {
+  document.querySelector("#app").innerHTML = `
+    <section class="result-card card">
+      <div class="eyebrow">Completed</div>
 
-        <h2>Your NewsQuest result</h2>
+      <h2>Your NewsQuest result</h2>
 
-        <div class="result-score">
-          ${response.score}/5
+      <div class="result-score">
+        ${response.score}/5
+      </div>
+
+      <div class="stat-grid">
+        <div class="stat">
+          <span class="small">Percentage</span>
+          <strong>${response.percentage}%</strong>
         </div>
 
-        <div class="stat-grid">
-          <div class="stat">
-            <span class="small">Percentage</span>
-            <strong>${response.percentage}%</strong>
-          </div>
-
-          <div class="stat">
-            <span class="small">Points earned</span>
-            <strong>${response.points}</strong>
-          </div>
-
-          <div class="stat">
-            <span class="small">Status</span>
-            <strong>Done</strong>
-          </div>
+        <div class="stat">
+          <span class="small">Points earned</span>
+          <strong>${response.points}</strong>
         </div>
 
-        <div class="notice">
-          Thank you. Your response has been recorded.
-          This respondent code cannot be used for another attempt.
+        <div class="stat">
+          <span class="small">Status</span>
+          <strong>Done</strong>
         </div>
+      </div>
 
-        <p class="small">
-          Correct answers are not displayed in the respondent interface.
-        </p>
+      <div class="notice">
+        Thank you. Your response has been recorded.
+        This respondent code cannot be used for another attempt.
+      </div>
+
+      <section style="margin-top: 30px; text-align: left;">
+        <div class="eyebrow">Article leaderboard</div>
+
+        <h3>
+          Top Participants · ${escapeHTML(
+            response.articleId.replace("article", "Article ")
+          )}
+        </h3>
+
+        <div id="leaderboard">
+          <div class="notice">
+            Loading leaderboard...
+          </div>
+        </div>
       </section>
+
+      <p class="small" style="margin-top: 24px;">
+        Correct answers are not displayed in the respondent interface.
+      </p>
+    </section>
+  `;
+
+  try {
+    const leaderboardQuery = query(
+      collection(
+        db,
+        "leaderboards",
+        response.articleId,
+        "entries"
+      ),
+      orderBy("points", "desc"),
+      limit(10)
+    );
+
+    const snapshot = await getDocs(leaderboardQuery);
+
+    const rows = snapshot.docs
+      .map((item, index) => {
+        const entry = item.data();
+        const rank = index + 1;
+
+        let medal = "";
+
+        if (rank === 1) medal = "🥇";
+        if (rank === 2) medal = "🥈";
+        if (rank === 3) medal = "🥉";
+
+        return `
+          <div
+            class="stat"
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              margin-bottom: 10px;
+            "
+          >
+            <span>
+              <strong>
+                ${medal} ${rank}. ${escapeHTML(
+                  entry.displayName
+                )}
+              </strong>
+            </span>
+
+            <span>
+              ${Number(entry.points || 0)} pts
+            </span>
+          </div>
+        `;
+      })
+      .join("");
+
+    document.querySelector("#leaderboard").innerHTML =
+      rows ||
+      `<div class="notice">No leaderboard entries yet.</div>`;
+
+  } catch (error) {
+    console.error("Leaderboard error:", error);
+
+    document.querySelector("#leaderboard").innerHTML = `
+      <div class="error">
+        Leaderboard could not be loaded.
+      </div>
     `;
   }
-
-  renderWelcome();
+}
 })();
