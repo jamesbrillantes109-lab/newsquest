@@ -967,8 +967,7 @@
   // =========================================================
 
 async function renderEditor() {
-  alert("NEW RESEARCHER.JS IS LOADING");
-  const container =
+ const container =
     document.querySelector(
       "#dashboard-content"
     );
@@ -1532,6 +1531,252 @@ async function renderEditor() {
       </section>
     `;
   }
+}
+  async function saveArticle(event, form) {
+
+  event.preventDefault();
+
+  const articleId =
+    form.dataset.articleId;
+
+  const saveMessage =
+    form.querySelector(".save-message");
+
+  try {
+
+    const formData =
+      new FormData(form);
+
+    const title =
+      formData.get("title")?.trim() || "";
+
+    const image =
+      formData.get("image")?.trim() || "";
+
+    const sectionElements =
+      form.querySelectorAll(
+        ".article-section"
+      );
+
+    const sections = [];
+
+    sectionElements.forEach(
+      (sectionElement, index) => {
+
+        const textareas =
+          sectionElement.querySelectorAll(
+            "textarea"
+          );
+
+        const paragraphs =
+          Array.from(textareas)
+            .map(textarea =>
+              textarea.value.trim()
+            )
+            .filter(Boolean);
+
+        const gameSelect =
+          sectionElement.querySelector(
+            "select[name$='_gameType']"
+          );
+
+        let game = null;
+
+        if (
+          index <
+          sectionElements.length - 1
+        ) {
+
+          const gameType =
+            gameSelect?.value || "";
+
+          if (gameType) {
+
+            game = {
+              type: gameType
+            };
+
+          }
+
+        }
+
+        sections.push({
+          section: index + 1,
+          paragraphs,
+          game
+        });
+
+      }
+    );
+
+
+    /* BACKWARD COMPATIBILITY */
+
+    const body =
+      sections
+        .flatMap(
+          section =>
+            section.paragraphs
+        )
+        .join("\n\n");
+
+
+    /* QUESTIONS */
+
+    const questions =
+      Array.from(
+        { length: 5 },
+        (_, index) => {
+
+          const text =
+            formData
+              .get(`q${index}_text`)
+              ?.trim() || "";
+
+          const choices =
+            Array.from(
+              { length: 4 },
+              (_, choiceIndex) =>
+                formData
+                  .get(
+                    `q${index}_choice${choiceIndex}`
+                  )
+                  ?.trim() || ""
+            );
+
+          const correct =
+            Number(
+              formData.get(
+                `q${index}_correct`
+              )
+            );
+
+          return {
+            text,
+            choices,
+            correct
+          };
+
+        }
+      );
+
+
+    /* VALIDATION */
+
+    if (!title) {
+      throw new Error(
+        "Article title is required."
+      );
+    }
+
+    if (!image) {
+      throw new Error(
+        "Article image is required."
+      );
+    }
+
+    sections.forEach(
+      (section, index) => {
+
+        if (
+          section.paragraphs.length === 0
+        ) {
+
+          throw new Error(
+            `Section ${index + 1} needs at least one paragraph.`
+          );
+
+        }
+
+      }
+    );
+
+
+    questions.forEach(
+      (question, index) => {
+
+        if (!question.text) {
+
+          throw new Error(
+            `Question ${index + 1} is missing.`
+          );
+
+        }
+
+        if (
+          question.choices.some(
+            choice => !choice
+          )
+        ) {
+
+          throw new Error(
+            `Question ${index + 1} needs four choices.`
+          );
+
+        }
+
+      }
+    );
+
+
+    /* SAVE TO FIRESTORE */
+
+    await setDoc(
+      doc(
+        db,
+        "articles",
+        articleId
+      ),
+      {
+        articleId,
+        title,
+        image,
+        body,
+        sections,
+        questions
+      },
+      {
+        merge: true
+      }
+    );
+
+
+    /* SUCCESS MESSAGE */
+
+    if (saveMessage) {
+
+      saveMessage.innerHTML = `
+        <div class="success">
+          Article saved successfully.
+        </div>
+      `;
+
+    }
+
+  } catch (error) {
+
+    console.error(
+      "Unable to save article:",
+      error
+    );
+
+    if (saveMessage) {
+
+      saveMessage.innerHTML = `
+        <div class="error">
+          ${
+            escapeHTML(
+              error.message ||
+              "Unable to save article."
+            )
+          }
+        </div>
+      `;
+
+    }
+
+  }
+
 }
 
   // =========================================================
