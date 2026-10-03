@@ -1076,21 +1076,107 @@
 
                   </div>
 
-                  <div class="form-group">
+               <div class="form-group">
 
-                    <label>
-                      Article body
-                    </label>
+  <label>Article Sections</label>
 
-                    <textarea
-                      name="body"
-                      required
-                    >${escapeHTML(
-                      article.body
-                    )}</textarea>
+  <div class="section-editor">
 
-                  </div>
+    <!-- SECTION 1 -->
+    <div class="article-section">
 
+      <h4>Section 1</h4>
+
+      <label>Paragraph 1</label>
+      <textarea
+        name="section1_paragraph1"
+        rows="4"
+        required
+      ></textarea>
+
+      <label>Paragraph 2</label>
+      <textarea
+        name="section1_paragraph2"
+        rows="4"
+        required
+      ></textarea>
+
+      <label>Game Type</label>
+      <select name="section1_gameType">
+        <option value="">None</option>
+        <option value="jumbled">Jumbled Words</option>
+        <option value="fourPics">4 Pics 1 Word</option>
+        <option value="crossword">Mini Crossword</option>
+      </select>
+
+    </div>
+
+
+    <!-- SECTION 2 -->
+    <div class="article-section">
+
+      <h4>Section 2</h4>
+
+      <label>Paragraph 3</label>
+      <textarea
+        name="section2_paragraph1"
+        rows="4"
+        required
+      ></textarea>
+
+      <label>Paragraph 4</label>
+      <textarea
+        name="section2_paragraph2"
+        rows="4"
+        required
+      ></textarea>
+
+      <label>Game Type</label>
+      <select name="section2_gameType">
+        <option value="">None</option>
+        <option value="jumbled">Jumbled Words</option>
+        <option value="fourPics">4 Pics 1 Word</option>
+        <option value="crossword">Mini Crossword</option>
+      </select>
+
+    </div>
+
+
+    <!-- SECTION 3 -->
+    <div class="article-section">
+
+      <h4>Section 3</h4>
+
+      <label>Paragraph 5</label>
+      <textarea
+        name="section3_paragraph1"
+        rows="4"
+        required
+      ></textarea>
+
+      <label>Paragraph 6</label>
+      <textarea
+        name="section3_paragraph2"
+        rows="4"
+        required
+      ></textarea>
+
+      <p>
+        <strong>Final Section</strong><br>
+        No interactive game. This section proceeds directly to the Final Quiz.
+      </p>
+
+      <input
+        type="hidden"
+        name="section3_gameType"
+        value=""
+      >
+
+    </div>
+
+  </div>
+
+</div>
                   <h3>
                     Exactly five questions
                   </h3>
