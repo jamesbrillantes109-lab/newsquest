@@ -967,6 +967,7 @@
   // =========================================================
 
 async function renderEditor() {
+  alert("NEW RESEARCHER.JS IS LOADING");
   const container =
     document.querySelector(
       "#dashboard-content"
