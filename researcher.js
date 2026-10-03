@@ -965,9 +965,9 @@
   // =========================================================
   // ARTICLE EDITOR
   // =========================================================
-
 async function renderEditor() {
- const container =
+
+  const container =
     document.querySelector(
       "#dashboard-content"
     );
@@ -987,6 +987,7 @@ async function renderEditor() {
   `;
 
   try {
+
     const snapshot =
       await getDocs(
         collection(
@@ -999,12 +1000,15 @@ async function renderEditor() {
 
     snapshot.docs.forEach(
       item => {
+
         data[item.id] = {
           articleId: item.id,
           ...item.data()
         };
+
       }
     );
+
 
     container.innerHTML =
       Object.keys(
@@ -1024,7 +1028,144 @@ async function renderEditor() {
                 articleId
               ];
 
+
+            /*
+             * GET EXISTING SECTIONS
+             *
+             * If the article already has sections,
+             * use them.
+             *
+             * Otherwise convert the old body
+             * into paragraph pairs.
+             */
+
+            let sections =
+              Array.isArray(
+                article.sections
+              )
+                ? article.sections
+                : [];
+
+
+            if (
+              sections.length === 0
+            ) {
+
+              const paragraphs =
+                String(
+                  article.body || ""
+                )
+                  .split(/\n\s*\n/)
+                  .map(
+                    paragraph =>
+                      paragraph.trim()
+                  )
+                  .filter(Boolean);
+
+
+              for (
+                let i = 0;
+                i < paragraphs.length;
+                i += 2
+              ) {
+
+                sections.push({
+                  section:
+                    sections.length + 1,
+
+                  paragraphs:
+                    paragraphs.slice(
+                      i,
+                      i + 2
+                    ),
+
+                  game:
+                    null
+                });
+
+              }
+
+            }
+
+
+            /*
+             * If there are no existing paragraphs,
+             * start with one empty section.
+             */
+
+            if (
+              sections.length === 0
+            ) {
+
+              sections = [
+                {
+                  section: 1,
+
+                  paragraphs: [
+                    "",
+                    ""
+                  ],
+
+                  game: null
+                }
+              ];
+
+            }
+
+
+            /*
+             * Normalize sections.
+             */
+
+            sections =
+              sections.map(
+                (section, index) => ({
+
+                  section:
+                    index + 1,
+
+                  paragraphs:
+                    Array.isArray(
+                      section.paragraphs
+                    )
+                      ? section.paragraphs
+                      : [
+                          "",
+                          ""
+                        ],
+
+                  game:
+                    section.game || null
+
+                })
+              );
+
+
+            /*
+             * The LAST section is ALWAYS
+             * the final section.
+             *
+             * Therefore it has NO game.
+             */
+
+            sections =
+              sections.map(
+                (section, index) => ({
+
+                  ...section,
+
+                  game:
+                    index ===
+                    sections.length - 1
+                      ? null
+                      : section.game
+
+                })
+              );
+
+
             return `
+
               <form
                 class="card editor-section article-editor"
                 data-article-id="${escapeAttr(
@@ -1083,7 +1224,7 @@ async function renderEditor() {
                 </div>
 
 
-                <!-- ARTICLE SECTIONS -->
+                <!-- DYNAMIC ARTICLE SECTIONS -->
 
                 <div class="form-group">
 
@@ -1091,254 +1232,204 @@ async function renderEditor() {
                     Article Sections
                   </label>
 
-                  <div class="section-editor">
+                  <div
+                    class="section-editor"
+                    data-sections-container
+                  >
+
+                    ${sections
+                      .map(
+                        (
+                          section,
+                          index
+                        ) => {
+
+                          const isFinal =
+                            index ===
+                            sections.length - 1;
+
+                          const paragraph1 =
+                            section
+                              .paragraphs?.[0] ||
+                            "";
+
+                          const paragraph2 =
+                            section
+                              .paragraphs?.[1] ||
+                            "";
+
+                          const gameType =
+                            section
+                              .game?.type ||
+                            "";
 
 
-                    <!-- SECTION 1 -->
+                          return `
 
-                    <div class="article-section">
+                            <div
+                              class="article-section"
+                              data-section-index="${index}"
+                            >
 
-                      <h4>
-                        Section 1
-                      </h4>
-
-                      <label>
-                        Paragraph 1
-                      </label>
-
-                      <textarea
-                        name="section1_paragraph1"
-                        rows="5"
-                        required
-                      >${escapeHTML(
-                        article.sections?.[0]?.paragraphs?.[0] || ""
-                      )}</textarea>
+                              <h4>
+                                Section ${
+                                  index + 1
+                                }
+                              </h4>
 
 
-                      <label>
-                        Paragraph 2
-                      </label>
+                              <!-- PARAGRAPH 1 -->
 
-                      <textarea
-                        name="section1_paragraph2"
-                        rows="5"
-                        required
-                      >${escapeHTML(
-                        article.sections?.[0]?.paragraphs?.[1] || ""
-                      )}</textarea>
+                              <label>
+                                Paragraph ${
+                                  index * 2 + 1
+                                }
+                              </label>
 
-
-                      <label>
-                        Game Type
-                      </label>
-
-                      <select
-                        name="section1_gameType"
-                      >
-
-                        <option
-                          value=""
-                          ${
-                            !article.sections?.[0]?.game?.type
-                              ? "selected"
-                              : ""
-                          }
-                        >
-                          None
-                        </option>
-
-                        <option
-                          value="jumbled"
-                          ${
-                            article.sections?.[0]?.game?.type ===
-                            "jumbled"
-                              ? "selected"
-                              : ""
-                          }
-                        >
-                          Jumbled Words
-                        </option>
-
-                        <option
-                          value="fourPics"
-                          ${
-                            article.sections?.[0]?.game?.type ===
-                            "fourPics"
-                              ? "selected"
-                              : ""
-                          }
-                        >
-                          4 Pics 1 Word
-                        </option>
-
-                        <option
-                          value="crossword"
-                          ${
-                            article.sections?.[0]?.game?.type ===
-                            "crossword"
-                              ? "selected"
-                              : ""
-                          }
-                        >
-                          Mini Crossword
-                        </option>
-
-                      </select>
-
-                    </div>
+                              <textarea
+                                name="section${index}_paragraph1"
+                                rows="5"
+                                required
+                              >${escapeHTML(
+                                paragraph1
+                              )}</textarea>
 
 
-                    <!-- SECTION 2 -->
+                              <!-- PARAGRAPH 2 -->
 
-                    <div class="article-section">
+                              <label>
+                                Paragraph ${
+                                  index * 2 + 2
+                                }
+                              </label>
 
-                      <h4>
-                        Section 2
-                      </h4>
-
-                      <label>
-                        Paragraph 3
-                      </label>
-
-                      <textarea
-                        name="section2_paragraph1"
-                        rows="5"
-                        required
-                      >${escapeHTML(
-                        article.sections?.[1]?.paragraphs?.[0] || ""
-                      )}</textarea>
-
-
-                      <label>
-                        Paragraph 4
-                      </label>
-
-                      <textarea
-                        name="section2_paragraph2"
-                        rows="5"
-                        required
-                      >${escapeHTML(
-                        article.sections?.[1]?.paragraphs?.[1] || ""
-                      )}</textarea>
+                              <textarea
+                                name="section${index}_paragraph2"
+                                rows="5"
+                                ${
+                                  isFinal
+                                    ? ""
+                                    : "required"
+                                }
+                              >${escapeHTML(
+                                paragraph2
+                              )}</textarea>
 
 
-                      <label>
-                        Game Type
-                      </label>
+                              ${
+                                isFinal
+                                  ? `
 
-                      <select
-                        name="section2_gameType"
-                      >
+                                    <div class="notice">
 
-                        <option
-                          value=""
-                          ${
-                            !article.sections?.[1]?.game?.type
-                              ? "selected"
-                              : ""
-                          }
-                        >
-                          None
-                        </option>
+                                      <strong>
+                                        Final Section
+                                      </strong>
 
-                        <option
-                          value="jumbled"
-                          ${
-                            article.sections?.[1]?.game?.type ===
-                            "jumbled"
-                              ? "selected"
-                              : ""
-                          }
-                        >
-                          Jumbled Words
-                        </option>
+                                      <br>
 
-                        <option
-                          value="fourPics"
-                          ${
-                            article.sections?.[1]?.game?.type ===
-                            "fourPics"
-                              ? "selected"
-                              : ""
-                          }
-                        >
-                          4 Pics 1 Word
-                        </option>
+                                      No interactive game
+                                      will be placed here.
 
-                        <option
-                          value="crossword"
-                          ${
-                            article.sections?.[1]?.game?.type ===
-                            "crossword"
-                              ? "selected"
-                              : ""
-                          }
-                        >
-                          Mini Crossword
-                        </option>
+                                      <br>
 
-                      </select>
+                                      After this section,
+                                      the respondent proceeds
+                                      directly to the Final Quiz.
 
-                    </div>
+                                    </div>
 
+                                    <input
+                                      type="hidden"
+                                      name="section${index}_gameType"
+                                      value=""
+                                    >
 
-                    <!-- SECTION 3 / FINAL SECTION -->
+                                  `
+                                  : `
 
-                    <div class="article-section">
+                                    <label>
+                                      Game Type
+                                    </label>
 
-                      <h4>
-                        Section 3
-                      </h4>
+                                    <select
+                                      name="section${index}_gameType"
+                                    >
 
-                      <label>
-                        Paragraph 5
-                      </label>
+                                      <option
+                                        value=""
+                                        ${
+                                          !gameType
+                                            ? "selected"
+                                            : ""
+                                        }
+                                      >
+                                        None
+                                      </option>
 
-                      <textarea
-                        name="section3_paragraph1"
-                        rows="5"
-                        required
-                      >${escapeHTML(
-                        article.sections?.[2]?.paragraphs?.[0] || ""
-                      )}</textarea>
+                                      <option
+                                        value="jumbled"
+                                        ${
+                                          gameType ===
+                                          "jumbled"
+                                            ? "selected"
+                                            : ""
+                                        }
+                                      >
+                                        Jumbled Words
+                                      </option>
 
+                                      <option
+                                        value="fourPics"
+                                        ${
+                                          gameType ===
+                                          "fourPics"
+                                            ? "selected"
+                                            : ""
+                                        }
+                                      >
+                                        4 Pics 1 Word
+                                      </option>
 
-                      <label>
-                        Paragraph 6
-                      </label>
+                                      <option
+                                        value="crossword"
+                                        ${
+                                          gameType ===
+                                          "crossword"
+                                            ? "selected"
+                                            : ""
+                                        }
+                                      >
+                                        Mini Crossword
+                                      </option>
 
-                      <textarea
-                        name="section3_paragraph2"
-                        rows="5"
-                        required
-                      >${escapeHTML(
-                        article.sections?.[2]?.paragraphs?.[1] || ""
-                      )}</textarea>
+                                    </select>
 
+                                  `
+                              }
 
-                      <div class="notice">
+                            </div>
 
-                        <strong>
-                          Final Section
-                        </strong>
+                          `;
 
-                        <br>
+                        }
+                      )
+                      .join("")}
 
-                        No interactive game will be placed
-                        here. After this section, the respondent
-                        proceeds directly to the Final Quiz.
-
-                      </div>
+                  </div>
 
 
-                      <input
-                        type="hidden"
-                        name="section3_gameType"
-                        value=""
-                      >
+                  <!-- ADD SECTION BUTTON -->
 
-                    </div>
+                  <div class="action-row">
 
+                    <button
+                      type="button"
+                      class="secondary-btn"
+                      data-add-section
+                    >
+                      + Add Section
+                    </button>
 
                   </div>
 
@@ -1351,6 +1442,7 @@ async function renderEditor() {
                   Exactly five questions
                 </h3>
 
+
                 ${Array.from(
                   { length: 5 },
                   (_, index) => {
@@ -1359,21 +1451,29 @@ async function renderEditor() {
                       article.questions?.[
                         index
                       ] || {
+
                         text: "",
+
                         choices: [
                           "",
                           "",
                           "",
                           ""
                         ],
+
                         correct: 0
+
                       };
 
+
                     return `
+
                       <div class="editor-question">
 
                         <strong>
-                          Question ${index + 1}
+                          Question ${
+                            index + 1
+                          }
                         </strong>
 
 
@@ -1401,6 +1501,7 @@ async function renderEditor() {
                           ${Array.from(
                             { length: 4 },
                             (_, choiceIndex) => `
+
                               <div class="form-group">
 
                                 <label>
@@ -1413,13 +1514,15 @@ async function renderEditor() {
                                   name="q${index}_choice${choiceIndex}"
                                   required
                                   value="${escapeAttr(
-                                    question.choices?.[
-                                      choiceIndex
-                                    ] || ""
+                                    question
+                                      .choices?.[
+                                        choiceIndex
+                                      ] || ""
                                   )}"
                                 >
 
                               </div>
+
                             `
                           ).join("")}
 
@@ -1439,6 +1542,7 @@ async function renderEditor() {
                             ${Array.from(
                               { length: 4 },
                               (_, choiceIndex) => `
+
                                 <option
                                   value="${choiceIndex}"
                                   ${
@@ -1454,6 +1558,7 @@ async function renderEditor() {
                                     choiceIndex + 1
                                   }
                                 </option>
+
                               `
                             ).join("")}
 
@@ -1462,12 +1567,14 @@ async function renderEditor() {
                         </div>
 
                       </div>
+
                     `;
+
                   }
                 ).join("")}
 
 
-                <!-- SAVE BUTTON -->
+                <!-- SAVE -->
 
                 <div class="action-row">
 
@@ -1488,33 +1595,246 @@ async function renderEditor() {
                 <div class="save-message"></div>
 
               </form>
+
             `;
+
           }
         )
         .join("");
 
 
-    <!-- FORM SUBMIT -->
+    /*
+     * FORM SUBMIT
+     */
 
     document
       .querySelectorAll(
         ".article-editor"
       )
-      .forEach(form => {
+      .forEach(
+        form => {
 
-        form.addEventListener(
-          "submit",
-          event => {
+          form.addEventListener(
+            "submit",
+            event => {
 
-            saveArticle(
-              event,
-              form
+              saveArticle(
+                event,
+                form
+              );
+
+            }
+          );
+
+
+          /*
+           * ADD SECTION
+           */
+
+          const addButton =
+            form.querySelector(
+              "[data-add-section]"
             );
 
-          }
-        );
 
-      });
+          addButton.addEventListener(
+            "click",
+            () => {
+
+              const sectionsContainer =
+                form.querySelector(
+                  "[data-sections-container]"
+                );
+
+
+              const currentSections =
+                sectionsContainer.querySelectorAll(
+                  ".article-section"
+                );
+
+
+              const newIndex =
+                currentSections.length;
+
+
+              /*
+               * Before adding a new section,
+               * the current FINAL section must
+               * become a normal section.
+               */
+
+              const currentLast =
+                currentSections[
+                  currentSections.length - 1
+                ];
+
+
+              const lastNotice =
+                currentLast.querySelector(
+                  ".notice"
+                );
+
+
+              if (lastNotice) {
+
+                lastNotice.remove();
+
+              }
+
+
+              const lastHidden =
+                currentLast.querySelector(
+                  'input[type="hidden"]'
+                );
+
+
+              if (lastHidden) {
+
+                lastHidden.remove();
+
+              }
+
+
+              /*
+               * Add game selector to the
+               * previous final section.
+               */
+
+              const gameLabel =
+                document.createElement(
+                  "label"
+                );
+
+              gameLabel.textContent =
+                "Game Type";
+
+
+              const gameSelect =
+                document.createElement(
+                  "select"
+                );
+
+              gameSelect.name =
+                `section${newIndex - 1}_gameType`;
+
+              gameSelect.innerHTML = `
+
+                <option value="">
+                  None
+                </option>
+
+                <option value="jumbled">
+                  Jumbled Words
+                </option>
+
+                <option value="fourPics">
+                  4 Pics 1 Word
+                </option>
+
+                <option value="crossword">
+                  Mini Crossword
+                </option>
+
+              `;
+
+
+              currentLast.appendChild(
+                gameLabel
+              );
+
+              currentLast.appendChild(
+                gameSelect
+              );
+
+
+              /*
+               * Create NEW FINAL section.
+               */
+
+              const newSection =
+                document.createElement(
+                  "div"
+                );
+
+              newSection.className =
+                "article-section";
+
+              newSection.dataset.sectionIndex =
+                newIndex;
+
+
+              newSection.innerHTML = `
+
+                <h4>
+                  Section ${
+                    newIndex + 1
+                  }
+                </h4>
+
+
+                <label>
+                  Paragraph ${
+                    newIndex * 2 + 1
+                  }
+                </label>
+
+                <textarea
+                  name="section${newIndex}_paragraph1"
+                  rows="5"
+                  required
+                ></textarea>
+
+
+                <label>
+                  Paragraph ${
+                    newIndex * 2 + 2
+                  }
+                </label>
+
+                <textarea
+                  name="section${newIndex}_paragraph2"
+                  rows="5"
+                ></textarea>
+
+
+                <div class="notice">
+
+                  <strong>
+                    Final Section
+                  </strong>
+
+                  <br>
+
+                  No interactive game
+                  will be placed here.
+
+                  <br>
+
+                  After this section,
+                  the respondent proceeds
+                  directly to the Final Quiz.
+
+                </div>
+
+                <input
+                  type="hidden"
+                  name="section${newIndex}_gameType"
+                  value=""
+                >
+
+              `;
+
+
+              sectionsContainer.appendChild(
+                newSection
+              );
+
+            }
+
+          );
+
+        }
+      );
 
 
   } catch (error) {
@@ -1522,6 +1842,7 @@ async function renderEditor() {
     console.error(error);
 
     container.innerHTML = `
+
       <section class="card editor-section">
 
         <div class="error">
@@ -1529,256 +1850,12 @@ async function renderEditor() {
         </div>
 
       </section>
+
     `;
-  }
-}
-  async function saveArticle(event, form) {
-
-  event.preventDefault();
-
-  const articleId =
-    form.dataset.articleId;
-
-  const saveMessage =
-    form.querySelector(".save-message");
-
-  try {
-
-    const formData =
-      new FormData(form);
-
-    const title =
-      formData.get("title")?.trim() || "";
-
-    const image =
-      formData.get("image")?.trim() || "";
-
-    const sectionElements =
-      form.querySelectorAll(
-        ".article-section"
-      );
-
-    const sections = [];
-
-    sectionElements.forEach(
-      (sectionElement, index) => {
-
-        const textareas =
-          sectionElement.querySelectorAll(
-            "textarea"
-          );
-
-        const paragraphs =
-          Array.from(textareas)
-            .map(textarea =>
-              textarea.value.trim()
-            )
-            .filter(Boolean);
-
-        const gameSelect =
-          sectionElement.querySelector(
-            "select[name$='_gameType']"
-          );
-
-        let game = null;
-
-        if (
-          index <
-          sectionElements.length - 1
-        ) {
-
-          const gameType =
-            gameSelect?.value || "";
-
-          if (gameType) {
-
-            game = {
-              type: gameType
-            };
-
-          }
-
-        }
-
-        sections.push({
-          section: index + 1,
-          paragraphs,
-          game
-        });
-
-      }
-    );
-
-
-    /* BACKWARD COMPATIBILITY */
-
-    const body =
-      sections
-        .flatMap(
-          section =>
-            section.paragraphs
-        )
-        .join("\n\n");
-
-
-    /* QUESTIONS */
-
-    const questions =
-      Array.from(
-        { length: 5 },
-        (_, index) => {
-
-          const text =
-            formData
-              .get(`q${index}_text`)
-              ?.trim() || "";
-
-          const choices =
-            Array.from(
-              { length: 4 },
-              (_, choiceIndex) =>
-                formData
-                  .get(
-                    `q${index}_choice${choiceIndex}`
-                  )
-                  ?.trim() || ""
-            );
-
-          const correct =
-            Number(
-              formData.get(
-                `q${index}_correct`
-              )
-            );
-
-          return {
-            text,
-            choices,
-            correct
-          };
-
-        }
-      );
-
-
-    /* VALIDATION */
-
-    if (!title) {
-      throw new Error(
-        "Article title is required."
-      );
-    }
-
-    if (!image) {
-      throw new Error(
-        "Article image is required."
-      );
-    }
-
-    sections.forEach(
-      (section, index) => {
-
-        if (
-          section.paragraphs.length === 0
-        ) {
-
-          throw new Error(
-            `Section ${index + 1} needs at least one paragraph.`
-          );
-
-        }
-
-      }
-    );
-
-
-    questions.forEach(
-      (question, index) => {
-
-        if (!question.text) {
-
-          throw new Error(
-            `Question ${index + 1} is missing.`
-          );
-
-        }
-
-        if (
-          question.choices.some(
-            choice => !choice
-          )
-        ) {
-
-          throw new Error(
-            `Question ${index + 1} needs four choices.`
-          );
-
-        }
-
-      }
-    );
-
-
-    /* SAVE TO FIRESTORE */
-
-    await setDoc(
-      doc(
-        db,
-        "articles",
-        articleId
-      ),
-      {
-        articleId,
-        title,
-        image,
-        body,
-        sections,
-        questions
-      },
-      {
-        merge: true
-      }
-    );
-
-
-    /* SUCCESS MESSAGE */
-
-    if (saveMessage) {
-
-      saveMessage.innerHTML = `
-        <div class="success">
-          Article saved successfully.
-        </div>
-      `;
-
-    }
-
-  } catch (error) {
-
-    console.error(
-      "Unable to save article:",
-      error
-    );
-
-    if (saveMessage) {
-
-      saveMessage.innerHTML = `
-        <div class="error">
-          ${
-            escapeHTML(
-              error.message ||
-              "Unable to save article."
-            )
-          }
-        </div>
-      `;
-
-    }
 
   }
 
 }
-
   // =========================================================
   // CODE MANAGER
   // =========================================================
