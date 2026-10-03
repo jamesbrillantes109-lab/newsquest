@@ -263,81 +263,202 @@
     }
   }
 
-  function renderArticle(article) {
+function renderArticle(article) {
 
-    const session =
-      getSession();
+  const session = getSession();
 
-    document.querySelector("#app").innerHTML = `
-      <div class="topbar">
+  // New section-based article
+  if (Array.isArray(article.sections) && article.sections.length > 0) {
+    renderArticleSection(article, 0);
+    return;
+  }
 
-        <div class="progress-wrap">
+  // OLD article format
+  // This keeps your existing articles working.
+  document.querySelector("#app").innerHTML = `
+    <div class="topbar">
 
-          <div class="progress-label">
-            <span>
-              Reading stage
-            </span>
+      <div class="progress-wrap">
 
-            <span>
-              1 of 2
-            </span>
-          </div>
+        <div class="progress-label">
+          <span>
+            Reading stage
+          </span>
 
-          <div class="progress-track">
-
-            <div
-              class="progress-fill"
-              style="width: 50%"
-            ></div>
-
-          </div>
-
+          <span>
+            1 of 2
+          </span>
         </div>
 
-        <div class="points">
-          +0 points
+        <div class="progress-track">
+
+          <div
+            class="progress-fill"
+            style="width: 50%"
+          ></div>
+
         </div>
 
       </div>
 
-      <article class="article-card card">
+      <div class="points">
+        +0 points
+      </div>
 
-        <img
-          class="article-image"
-          src="${escapeHTML(article.image || "")}"
-          alt="Article image"
-        >
+    </div>
 
-        <div class="article-content">
+    <article class="article-card card">
 
-          <div class="eyebrow">
-            Set ${escapeHTML(session.set)}
-            · Assigned reading
-          </div>
+      <img
+        class="article-image"
+        src="${escapeHTML(article.image || "")}"
+        alt="Article image"
+      >
 
-          <h2>
-            ${escapeHTML(article.title)}
-          </h2>
+      <div class="article-content">
 
-          <p class="article-body">
-            ${escapeHTML(article.body)}
-          </p>
+        <div class="eyebrow">
+          Set ${escapeHTML(session.set)}
+          · Assigned reading
+        </div>
 
-          <div class="action-row">
+        <h2>
+          ${escapeHTML(article.title)}
+        </h2>
 
-            <button
-              id="begin-quiz"
-              class="primary-btn"
-            >
-              I'm ready for the five-question quiz
-            </button>
+        <p class="article-body">
+          ${escapeHTML(article.body || "")}
+        </p>
 
-          </div>
+        <div class="action-row">
+
+          <button
+            id="begin-quiz"
+            class="primary-btn"
+          >
+            I'm ready for the five-question quiz
+          </button>
 
         </div>
 
-      </article>
-    `;
+      </div>
+
+    </article>
+  `;
+
+  document
+    .querySelector("#begin-quiz")
+    .addEventListener(
+      "click",
+      () => renderQuiz(article)
+    );
+}
+
+
+function renderArticleSection(article, sectionIndex) {
+
+  const session = getSession();
+
+  const sections = article.sections || [];
+  const section = sections[sectionIndex];
+
+  if (!section) {
+    renderQuiz(article);
+    return;
+  }
+
+  const isFinalSection =
+    sectionIndex === sections.length - 1;
+
+  const paragraphs =
+    Array.isArray(section.paragraphs)
+      ? section.paragraphs
+      : [];
+
+  const progressPercent =
+    ((sectionIndex + 1) / sections.length) * 100;
+
+  document.querySelector("#app").innerHTML = `
+    <div class="topbar">
+
+      <div class="progress-wrap">
+
+        <div class="progress-label">
+          <span>
+            Reading stage
+          </span>
+
+          <span>
+            ${sectionIndex + 1} of ${sections.length}
+          </span>
+        </div>
+
+        <div class="progress-track">
+
+          <div
+            class="progress-fill"
+            style="width: ${progressPercent}%"
+          ></div>
+
+        </div>
+
+      </div>
+
+      <div class="points">
+        +0 points
+      </div>
+
+    </div>
+
+    <article class="article-card card">
+
+      <div class="article-content">
+
+        <div class="eyebrow">
+          Set ${escapeHTML(session.set)}
+          · Assigned reading
+        </div>
+
+        <h2>
+          ${escapeHTML(article.title)}
+        </h2>
+
+        ${paragraphs.map(paragraph => `
+          <p class="article-body">
+            ${escapeHTML(paragraph)}
+          </p>
+        `).join("")}
+
+        <div class="action-row">
+
+          ${
+            isFinalSection
+              ? `
+                <button
+                  id="begin-quiz"
+                  class="primary-btn"
+                >
+                  Proceed to Final Quiz
+                </button>
+              `
+              : `
+                <button
+                  id="continue-section"
+                  class="primary-btn"
+                >
+                  Continue to Interactive Game
+                </button>
+              `
+          }
+
+        </div>
+
+      </div>
+
+    </article>
+  `;
+
+  if (isFinalSection) {
 
     document
       .querySelector("#begin-quiz")
@@ -345,9 +466,21 @@
         "click",
         () => renderQuiz(article)
       );
-  }
 
-  function renderQuiz(article) {
+  } else {
+
+    document
+      .querySelector("#continue-section")
+      .addEventListener(
+        "click",
+        () => renderInteractiveGame(
+          article,
+          sectionIndex
+        )
+      );
+
+  }
+}
 
     document.querySelector("#app").innerHTML = `
       <div class="topbar">
