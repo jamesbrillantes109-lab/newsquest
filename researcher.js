@@ -966,510 +966,572 @@
   // ARTICLE EDITOR
   // =========================================================
 
-  async function renderEditor() {
-    const container =
-      document.querySelector(
-        "#dashboard-content"
-      );
+async function renderEditor() {
+  const container =
+    document.querySelector(
+      "#dashboard-content"
+    );
 
-    container.innerHTML = `
-      <section class="card editor-section">
+  container.innerHTML = `
+    <section class="card editor-section">
 
-        <h3>
-          Article and quiz editor
-        </h3>
+      <h3>
+        Article and quiz editor
+      </h3>
 
-        <div class="notice">
-          Loading articles...
-        </div>
+      <div class="notice">
+        Loading articles...
+      </div>
 
-      </section>
-    `;
+    </section>
+  `;
 
-    try {
-      const snapshot =
-        await getDocs(
-          collection(
-            db,
-            "articles"
-          )
-        );
-
-      const data = {};
-
-      snapshot.docs.forEach(
-        item => {
-          data[item.id] = {
-            articleId: item.id,
-            ...item.data()
-          };
-        }
-      );
-
-      container.innerHTML =
-        Object.keys(
-          SET_ARTICLES
+  try {
+    const snapshot =
+      await getDocs(
+        collection(
+          db,
+          "articles"
         )
-          .map(
-            setNumber => {
+      );
 
-              const articleId =
-                SET_ARTICLES[
-                  setNumber
-                ];
+    const data = {};
 
-              const article =
-                data[articleId] ||
-                DEFAULT_ARTICLES[
+    snapshot.docs.forEach(
+      item => {
+        data[item.id] = {
+          articleId: item.id,
+          ...item.data()
+        };
+      }
+    );
+
+    container.innerHTML =
+      Object.keys(
+        SET_ARTICLES
+      )
+        .map(
+          setNumber => {
+
+            const articleId =
+              SET_ARTICLES[
+                setNumber
+              ];
+
+            const article =
+              data[articleId] ||
+              DEFAULT_ARTICLES[
+                articleId
+              ];
+
+            return `
+              <form
+                class="card editor-section article-editor"
+                data-article-id="${escapeAttr(
                   articleId
-                ];
+                )}"
+              >
 
-              return `
-                <form
-                  class="card editor-section article-editor"
-                  data-article-id="${escapeAttr(
-                    articleId
-                  )}"
-                >
+                <div class="eyebrow">
+                  Set ${setNumber}
+                </div>
 
-                  <div class="eyebrow">
-                    Set ${setNumber}
+                <h3>
+                  ${escapeHTML(
+                    articleName(
+                      articleId
+                    )
+                  )}
+                </h3>
+
+
+                <!-- TITLE -->
+
+                <div class="form-group">
+
+                  <label>
+                    Title
+                  </label>
+
+                  <input
+                    name="title"
+                    required
+                    value="${escapeAttr(
+                      article.title || ""
+                    )}"
+                  >
+
+                </div>
+
+
+                <!-- IMAGE -->
+
+                <div class="form-group">
+
+                  <label>
+                    Image URL
+                  </label>
+
+                  <input
+                    name="image"
+                    required
+                    value="${escapeAttr(
+                      article.image || ""
+                    )}"
+                  >
+
+                </div>
+
+
+                <!-- ARTICLE SECTIONS -->
+
+                <div class="form-group">
+
+                  <label>
+                    Article Sections
+                  </label>
+
+                  <div class="section-editor">
+
+
+                    <!-- SECTION 1 -->
+
+                    <div class="article-section">
+
+                      <h4>
+                        Section 1
+                      </h4>
+
+                      <label>
+                        Paragraph 1
+                      </label>
+
+                      <textarea
+                        name="section1_paragraph1"
+                        rows="5"
+                        required
+                      >${escapeHTML(
+                        article.sections?.[0]?.paragraphs?.[0] || ""
+                      )}</textarea>
+
+
+                      <label>
+                        Paragraph 2
+                      </label>
+
+                      <textarea
+                        name="section1_paragraph2"
+                        rows="5"
+                        required
+                      >${escapeHTML(
+                        article.sections?.[0]?.paragraphs?.[1] || ""
+                      )}</textarea>
+
+
+                      <label>
+                        Game Type
+                      </label>
+
+                      <select
+                        name="section1_gameType"
+                      >
+
+                        <option
+                          value=""
+                          ${
+                            !article.sections?.[0]?.game?.type
+                              ? "selected"
+                              : ""
+                          }
+                        >
+                          None
+                        </option>
+
+                        <option
+                          value="jumbled"
+                          ${
+                            article.sections?.[0]?.game?.type ===
+                            "jumbled"
+                              ? "selected"
+                              : ""
+                          }
+                        >
+                          Jumbled Words
+                        </option>
+
+                        <option
+                          value="fourPics"
+                          ${
+                            article.sections?.[0]?.game?.type ===
+                            "fourPics"
+                              ? "selected"
+                              : ""
+                          }
+                        >
+                          4 Pics 1 Word
+                        </option>
+
+                        <option
+                          value="crossword"
+                          ${
+                            article.sections?.[0]?.game?.type ===
+                            "crossword"
+                              ? "selected"
+                              : ""
+                          }
+                        >
+                          Mini Crossword
+                        </option>
+
+                      </select>
+
+                    </div>
+
+
+                    <!-- SECTION 2 -->
+
+                    <div class="article-section">
+
+                      <h4>
+                        Section 2
+                      </h4>
+
+                      <label>
+                        Paragraph 3
+                      </label>
+
+                      <textarea
+                        name="section2_paragraph1"
+                        rows="5"
+                        required
+                      >${escapeHTML(
+                        article.sections?.[1]?.paragraphs?.[0] || ""
+                      )}</textarea>
+
+
+                      <label>
+                        Paragraph 4
+                      </label>
+
+                      <textarea
+                        name="section2_paragraph2"
+                        rows="5"
+                        required
+                      >${escapeHTML(
+                        article.sections?.[1]?.paragraphs?.[1] || ""
+                      )}</textarea>
+
+
+                      <label>
+                        Game Type
+                      </label>
+
+                      <select
+                        name="section2_gameType"
+                      >
+
+                        <option
+                          value=""
+                          ${
+                            !article.sections?.[1]?.game?.type
+                              ? "selected"
+                              : ""
+                          }
+                        >
+                          None
+                        </option>
+
+                        <option
+                          value="jumbled"
+                          ${
+                            article.sections?.[1]?.game?.type ===
+                            "jumbled"
+                              ? "selected"
+                              : ""
+                          }
+                        >
+                          Jumbled Words
+                        </option>
+
+                        <option
+                          value="fourPics"
+                          ${
+                            article.sections?.[1]?.game?.type ===
+                            "fourPics"
+                              ? "selected"
+                              : ""
+                          }
+                        >
+                          4 Pics 1 Word
+                        </option>
+
+                        <option
+                          value="crossword"
+                          ${
+                            article.sections?.[1]?.game?.type ===
+                            "crossword"
+                              ? "selected"
+                              : ""
+                          }
+                        >
+                          Mini Crossword
+                        </option>
+
+                      </select>
+
+                    </div>
+
+
+                    <!-- SECTION 3 / FINAL SECTION -->
+
+                    <div class="article-section">
+
+                      <h4>
+                        Section 3
+                      </h4>
+
+                      <label>
+                        Paragraph 5
+                      </label>
+
+                      <textarea
+                        name="section3_paragraph1"
+                        rows="5"
+                        required
+                      >${escapeHTML(
+                        article.sections?.[2]?.paragraphs?.[0] || ""
+                      )}</textarea>
+
+
+                      <label>
+                        Paragraph 6
+                      </label>
+
+                      <textarea
+                        name="section3_paragraph2"
+                        rows="5"
+                        required
+                      >${escapeHTML(
+                        article.sections?.[2]?.paragraphs?.[1] || ""
+                      )}</textarea>
+
+
+                      <div class="notice">
+
+                        <strong>
+                          Final Section
+                        </strong>
+
+                        <br>
+
+                        No interactive game will be placed
+                        here. After this section, the respondent
+                        proceeds directly to the Final Quiz.
+
+                      </div>
+
+
+                      <input
+                        type="hidden"
+                        name="section3_gameType"
+                        value=""
+                      >
+
+                    </div>
+
+
                   </div>
 
-                  <h3>
-                    ${escapeHTML(
-                      articleName(
-                        articleId
-                      )
-                    )}
-                  </h3>
-
-                  <div class="form-group">
-
-                    <label>
-                      Title
-                    </label>
-
-                    <input
-                      name="title"
-                      required
-                      value="${escapeAttr(
-                        article.title
-                      )}"
-                    >
-
-                  </div>
-
-                  <div class="form-group">
-
-                    <label>
-                      Image URL
-                    </label>
-
-                    <input
-                      name="image"
-                      required
-                      value="${escapeAttr(
-                        article.image
-                      )}"
-                    >
-
-                  </div>
-
-               <div class="form-group">
-
-  <label>Article Sections</label>
-
-  <div class="section-editor">
-
-    <!-- SECTION 1 -->
-    <div class="article-section">
-
-      <h4>Section 1</h4>
-
-      <label>Paragraph 1</label>
-      <textarea
-        name="section1_paragraph1"
-        rows="4"
-        required
-      ></textarea>
-
-      <label>Paragraph 2</label>
-      <textarea
-        name="section1_paragraph2"
-        rows="4"
-        required
-      ></textarea>
-
-      <label>Game Type</label>
-      <select name="section1_gameType">
-        <option value="">None</option>
-        <option value="jumbled">Jumbled Words</option>
-        <option value="fourPics">4 Pics 1 Word</option>
-        <option value="crossword">Mini Crossword</option>
-      </select>
-
-    </div>
+                </div>
 
 
-    <!-- SECTION 2 -->
-    <div class="article-section">
+                <!-- QUIZ -->
 
-      <h4>Section 2</h4>
+                <h3>
+                  Exactly five questions
+                </h3>
 
-      <label>Paragraph 3</label>
-      <textarea
-        name="section2_paragraph1"
-        rows="4"
-        required
-      ></textarea>
+                ${Array.from(
+                  { length: 5 },
+                  (_, index) => {
 
-      <label>Paragraph 4</label>
-      <textarea
-        name="section2_paragraph2"
-        rows="4"
-        required
-      ></textarea>
+                    const question =
+                      article.questions?.[
+                        index
+                      ] || {
+                        text: "",
+                        choices: [
+                          "",
+                          "",
+                          "",
+                          ""
+                        ],
+                        correct: 0
+                      };
 
-      <label>Game Type</label>
-      <select name="section2_gameType">
-        <option value="">None</option>
-        <option value="jumbled">Jumbled Words</option>
-        <option value="fourPics">4 Pics 1 Word</option>
-        <option value="crossword">Mini Crossword</option>
-      </select>
+                    return `
+                      <div class="editor-question">
 
-    </div>
+                        <strong>
+                          Question ${index + 1}
+                        </strong>
 
 
-    <!-- SECTION 3 -->
-    <div class="article-section">
+                        <div class="form-group">
 
-      <h4>Section 3</h4>
+                          <label>
+                            Question text
+                          </label>
 
-      <label>Paragraph 5</label>
-      <textarea
-        name="section3_paragraph1"
-        rows="4"
-        required
-      ></textarea>
+                          <input
+                            name="q${index}_text"
+                            required
+                            value="${escapeAttr(
+                              question.text || ""
+                            )}"
+                          >
 
-      <label>Paragraph 6</label>
-      <textarea
-        name="section3_paragraph2"
-        rows="4"
-        required
-      ></textarea>
+                        </div>
 
-      <p>
-        <strong>Final Section</strong><br>
-        No interactive game. This section proceeds directly to the Final Quiz.
-      </p>
 
-      <input
-        type="hidden"
-        name="section3_gameType"
-        value=""
-      >
+                        <div
+                          class="editor-question-grid"
+                        >
 
-    </div>
+                          ${Array.from(
+                            { length: 4 },
+                            (_, choiceIndex) => `
+                              <div class="form-group">
 
-  </div>
+                                <label>
+                                  Choice ${
+                                    choiceIndex + 1
+                                  }
+                                </label>
 
-</div>
-                  <h3>
-                    Exactly five questions
-                  </h3>
+                                <input
+                                  name="q${index}_choice${choiceIndex}"
+                                  required
+                                  value="${escapeAttr(
+                                    question.choices?.[
+                                      choiceIndex
+                                    ] || ""
+                                  )}"
+                                >
 
-                  ${Array.from(
-                    { length: 5 },
-                    (_, index) => {
+                              </div>
+                            `
+                          ).join("")}
 
-                      const question =
-                        article.questions?.[
-                          index
-                        ] || {
-                          text: "",
-                          choices: [
-                            "",
-                            "",
-                            "",
-                            ""
-                          ],
-                          correct: 0
-                        };
+                        </div>
 
-                      return `
-                        <div class="editor-question">
 
-                          <strong>
-                            Question ${index + 1}
-                          </strong>
+                        <div class="form-group">
 
-                          <div class="form-group">
+                          <label>
+                            Correct answer
+                          </label>
 
-                            <label>
-                              Question text
-                            </label>
-
-                            <input
-                              name="q${index}_text"
-                              required
-                              value="${escapeAttr(
-                                question.text
-                              )}"
-                            >
-
-                          </div>
-
-                          <div
-                            class="editor-question-grid"
+                          <select
+                            name="q${index}_correct"
                           >
 
                             ${Array.from(
                               { length: 4 },
                               (_, choiceIndex) => `
-                                <div class="form-group">
-
-                                  <label>
-                                    Choice ${
-                                      choiceIndex + 1
-                                    }
-                                  </label>
-
-                                  <input
-                                    name="q${index}_choice${choiceIndex}"
-                                    required
-                                    value="${escapeAttr(
-                                      question.choices?.[
-                                        choiceIndex
-                                      ] || ""
-                                    )}"
-                                  >
-
-                                </div>
+                                <option
+                                  value="${choiceIndex}"
+                                  ${
+                                    choiceIndex ===
+                                    Number(
+                                      question.correct
+                                    )
+                                      ? "selected"
+                                      : ""
+                                  }
+                                >
+                                  Choice ${
+                                    choiceIndex + 1
+                                  }
+                                </option>
                               `
                             ).join("")}
 
-                          </div>
-
-                          <div class="form-group">
-
-                            <label>
-                              Correct answer
-                            </label>
-
-                            <select
-                              name="q${index}_correct"
-                            >
-
-                              ${Array.from(
-                                { length: 4 },
-                                (_, choiceIndex) => `
-                                  <option
-                                    value="${choiceIndex}"
-                                    ${
-                                      choiceIndex ===
-                                      Number(
-                                        question.correct
-                                      )
-                                        ? "selected"
-                                        : ""
-                                    }
-                                  >
-                                    Choice ${
-                                      choiceIndex + 1
-                                    }
-                                  </option>
-                                `
-                              ).join("")}
-
-                            </select>
-
-                          </div>
+                          </select>
 
                         </div>
-                      `;
-                    }
-                  ).join("")}
 
-                  <div class="action-row">
+                      </div>
+                    `;
+                  }
+                ).join("")}
 
-                    <button
-                      class="primary-btn"
-                      type="submit"
-                    >
-                      Save ${escapeHTML(
-                        articleName(
-                          articleId
-                        )
-                      )}
-                    </button>
 
-                  </div>
+                <!-- SAVE BUTTON -->
 
-                  <div class="save-message"></div>
+                <div class="action-row">
 
-                </form>
-              `;
-            }
-          )
-          .join("");
+                  <button
+                    class="primary-btn"
+                    type="submit"
+                  >
+                    Save ${escapeHTML(
+                      articleName(
+                        articleId
+                      )
+                    )}
+                  </button>
 
-      document
-        .querySelectorAll(
-          ".article-editor"
+                </div>
+
+
+                <div class="save-message"></div>
+
+              </form>
+            `;
+          }
         )
-        .forEach(form => {
+        .join("");
 
-          form.addEventListener(
-            "submit",
-            event => {
-              saveArticle(
-                event,
-                form
-              );
-            }
-          );
 
-        });
+    <!-- FORM SUBMIT -->
 
-    } catch (error) {
-      console.error(error);
+    document
+      .querySelectorAll(
+        ".article-editor"
+      )
+      .forEach(form => {
 
-      container.innerHTML = `
-        <section class="card editor-section">
+        form.addEventListener(
+          "submit",
+          event => {
 
-          <div class="error">
-            Unable to load the article editor.
-          </div>
+            saveArticle(
+              event,
+              form
+            );
 
-        </section>
-      `;
-    }
+          }
+        );
+
+      });
+
+
+  } catch (error) {
+
+    console.error(error);
+
+    container.innerHTML = `
+      <section class="card editor-section">
+
+        <div class="error">
+          Unable to load the article editor.
+        </div>
+
+      </section>
+    `;
   }
-
-  async function saveArticle(
-    event,
-    form
-  ) {
-    event.preventDefault();
-
-    const articleId =
-      form.dataset.articleId;
-
-    const formData =
-      new FormData(form);
-
-    const message =
-      form.querySelector(
-        ".save-message"
-      );
-
-    const questions =
-      Array.from(
-        { length: 5 },
-        (_, index) => ({
-
-          text:
-            String(
-              formData.get(
-                `q${index}_text`
-              ) || ""
-            ).trim(),
-
-          choices:
-            Array.from(
-              { length: 4 },
-              (_, choiceIndex) =>
-                String(
-                  formData.get(
-                    `q${index}_choice${choiceIndex}`
-                  ) || ""
-                ).trim()
-            ),
-
-          correct:
-            Number(
-              formData.get(
-                `q${index}_correct`
-              )
-            )
-
-        })
-      );
-
-    const invalid =
-      questions.some(
-        question =>
-          !question.text ||
-          question.choices.length !== 4 ||
-          question.choices.some(
-            choice =>
-              !choice
-          )
-      );
-
-    if (invalid) {
-      message.innerHTML =
-        errorBox(
-          "Every question needs four choices."
-        );
-
-      return;
-    }
-
-    try {
-
-      await setDoc(
-        doc(
-          db,
-          "articles",
-          articleId
-        ),
-        {
-          articleId,
-
-          title:
-            String(
-              formData.get(
-                "title"
-              ) || ""
-            ).trim(),
-
-          image:
-            String(
-              formData.get(
-                "image"
-              ) || ""
-            ).trim(),
-
-          body:
-            String(
-              formData.get(
-                "body"
-              ) || ""
-            ).trim(),
-
-          questions
-        }
-      );
-
-      message.innerHTML =
-        noticeBox(
-          "Saved successfully."
-        );
-
-    } catch (error) {
-
-      console.error(error);
-
-      message.innerHTML =
-        errorBox(
-          "The article could not be saved."
-        );
-    }
-  }
+}
 
   // =========================================================
   // CODE MANAGER
