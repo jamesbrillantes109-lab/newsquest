@@ -378,6 +378,7 @@ function renderArticleSection(article, sectionIndex) {
   const progressPercent =
     ((sectionIndex + 1) / sections.length) * 100;
 
+  function renderQuiz(article) {
   document.querySelector("#app").innerHTML = `
     <div class="topbar">
 
