@@ -267,12 +267,243 @@ function renderArticle(article) {
 
   const session = getSession();
 
-  // New section-based article
-  if (Array.isArray(article.sections) && article.sections.length > 0) {
-    renderArticleSection(article, 0);
+  // New paragraph + game article
+  if (
+    Array.isArray(article.paragraphs) &&
+    article.paragraphs.length > 0
+  ) {
+    renderArticleWithGames(article);
     return;
   }
+  function renderArticleWithGames(article) {
 
+  const session = getSession();
+
+  const paragraphs = Array.isArray(article.paragraphs)
+    ? article.paragraphs
+    : [];
+
+  const games = Array.isArray(article.games)
+    ? article.games
+    : [];
+
+  const totalParagraphs = paragraphs.length;
+
+  const gameMap = {};
+
+  games.forEach(game => {
+
+    const position = Number(game.position);
+
+    if (
+      Number.isInteger(position) &&
+      position >= 1 &&
+      position <= totalParagraphs
+    ) {
+      gameMap[position] = game;
+    }
+
+  });
+
+  const progressPercent = 100;
+
+  document.querySelector("#app").innerHTML = `
+
+    <div class="topbar">
+
+      <div class="progress-wrap">
+
+        <div class="progress-label">
+
+          <span>
+            Reading
+          </span>
+
+          <span>
+            Article
+          </span>
+
+        </div>
+
+        <div class="progress-track">
+
+          <div
+            class="progress-fill"
+            style="width: ${progressPercent}%"
+          ></div>
+
+        </div>
+
+      </div>
+
+      <div class="points">
+        +0 points
+      </div>
+
+    </div>
+
+    <article class="article-card card">
+
+      <div class="article-content">
+
+        <div class="eyebrow">
+          Set ${escapeHTML(session.set)}
+          · Assigned reading
+        </div>
+
+        <h2>
+          ${escapeHTML(article.title)}
+        </h2>
+
+        ${
+          article.image
+            ? `
+              <img
+                src="${escapeAttr(article.image)}"
+                alt="${escapeAttr(article.title)}"
+                class="article-image"
+              >
+            `
+            : ""
+        }
+
+        ${paragraphs
+          .map(
+            (paragraph, index) => `
+
+              <p class="article-body">
+                ${escapeHTML(paragraph)}
+              </p>
+
+              ${
+                gameMap[index + 1]
+                  ? `
+                    <div
+                      class="interactive-game card"
+                      data-game-position="${index + 1}"
+                    >
+                      ${renderReaderGame(gameMap[index + 1])}
+                    </div>
+                  `
+                  : ""
+              }
+
+            `
+          )
+          .join("")}
+
+        <div class="action-row">
+
+          <button
+            id="begin-quiz"
+            class="primary-btn"
+          >
+            Proceed to Final Quiz
+          </button>
+
+        </div>
+
+      </div>
+
+    </article>
+  `;
+
+  document
+    .querySelector("#begin-quiz")
+    .addEventListener(
+      "click",
+      () => renderQuiz(article)
+    );
+    document
+  .querySelectorAll(".interactive-game")
+  .forEach(gameContainer => {
+
+    const position =
+      Number(
+        gameContainer.dataset.gamePosition
+      );
+
+    const game =
+      gameMap[position];
+
+    const input =
+      gameContainer.querySelector(
+        ".game-answer"
+      );
+
+    const button =
+      gameContainer.querySelector(
+        ".game-submit"
+      );
+
+    const message =
+      gameContainer.querySelector(
+        ".game-message"
+      );
+
+    if (
+      !game ||
+      !input ||
+      !button ||
+      !message
+    ) {
+      return;
+    }
+
+    button.addEventListener(
+      "click",
+      () => {
+
+        const userAnswer =
+          input.value
+            .trim()
+            .toLowerCase();
+
+        const correctAnswer =
+          String(
+            game.answer || ""
+          )
+            .trim()
+            .toLowerCase();
+
+        if (!userAnswer) {
+
+          message.innerHTML =
+            setMessage(
+              "Please enter your answer first."
+            );
+
+          return;
+        }
+
+        if (
+          userAnswer ===
+          correctAnswer
+        ) {
+
+          message.innerHTML =
+            setMessage(
+              "Correct! Great job.",
+              "success"
+            );
+
+          input.disabled = true;
+          button.disabled = true;
+
+        } else {
+
+          message.innerHTML =
+            setMessage(
+              "Not quite. Try again."
+            );
+
+        }
+
+      }
+    );
+
+  });
+}
   // OLD article format
   // This keeps your existing articles working.
   document.querySelector("#app").innerHTML = `
@@ -353,7 +584,336 @@ function renderArticle(article) {
       () => renderQuiz(article)
     );
 }
+function renderReaderGame(game) {
 
+  if (!game || !game.type) {
+    return "";
+  }
+
+  if (game.type === "jumbled") {
+
+    return `
+      <div class="game-box">
+
+        <div class="eyebrow">
+          Interactive Game
+        </div>
+
+        <h3>
+          Jumbled Words
+        </h3>
+
+        <p class="small">
+          Unscramble the letters to find the correct word.
+        </p>
+
+        <div class="game-scrambled">
+          ${escapeHTML(game.scrambled || "")}
+        </div>
+
+        ${
+          game.hint
+            ? `
+              <p class="small">
+                Hint: ${escapeHTML(game.hint)}
+              </p>
+            `
+            : ""
+        }
+
+        <input
+          class="game-answer game-input"
+          type="text"
+          autocomplete="off"
+          placeholder="Type your answer"
+        >
+
+        <button
+          class="game-submit primary-btn"
+          type="button"
+        >
+          Check Answer
+        </button>
+
+        <div class="game-message"></div>
+
+      </div>
+    `;
+  }
+
+  if (game.type === "fourPics") {
+
+    return `
+      <div class="game-box">
+
+        <div class="eyebrow">
+          Interactive Game
+        </div>
+
+        <h3>
+          4 Pics 1 Word
+        </h3>
+
+        <div class="four-pics-grid">
+
+          ${(game.images || [])
+            .slice(0, 4)
+            .map(
+              image => `
+                <img
+                  src="${escapeAttr(image)}"
+                  alt="Game image"
+                  class="game-image"
+                >
+              `
+            )
+            .join("")}
+
+        </div>
+
+        ${
+          game.hint
+            ? `
+              <p class="small">
+                Hint: ${escapeHTML(game.hint)}
+              </p>
+            `
+            : ""
+        }
+
+        <input
+          class="game-answer game-input"
+          type="text"
+          autocomplete="off"
+          placeholder="What is the word?"
+        >
+
+        <button
+          class="game-submit primary-btn"
+          type="button"
+        >
+          Check Answer
+        </button>
+
+        <div class="game-message"></div>
+
+      </div>
+    `;
+  }
+
+  if (game.type === "crossword") {
+
+    return `
+      <div class="game-box">
+
+        <div class="eyebrow">
+          Interactive Game
+        </div>
+
+        <h3>
+          Mini Crossword
+        </h3>
+
+        <p class="small">
+          Solve the clue below.
+        </p>
+
+        <div class="crossword-clue">
+          ${escapeHTML(game.clue || "")}
+        </div>
+
+        <input
+          class="game-answer game-input"
+          type="text"
+          autocomplete="off"
+          placeholder="Type your answer"
+        >
+
+        <button
+          class="game-submit primary-btn"
+          type="button"
+        >
+          Check Answer
+        </button>
+
+        <div class="game-message"></div>
+
+      </div>
+    `;
+  }
+
+  return "";
+}
+
+  if (game.type === "jumbled") {
+
+    return `
+      <div class="game-box">
+
+        <div class="eyebrow">
+          Interactive Game
+        </div>
+
+        <h3>
+          Jumbled Words
+        </h3>
+
+        <p class="small">
+          Unscramble the letters to find the correct word.
+        </p>
+
+        <div class="game-scrambled">
+          ${escapeHTML(game.scrambled || "")}
+        </div>
+
+        ${
+          game.hint
+            ? `
+              <p class="small">
+                Hint: ${escapeHTML(game.hint)}
+              </p>
+            `
+            : ""
+        }
+
+        <input
+         class="game-answer"
+          class="game-input"
+          type="text"
+          autocomplete="off"
+          placeholder="Type your answer"
+        >
+
+        <button
+        class="game-submit"
+          class="primary-btn"
+          type="button"
+        >
+          Check Answer
+        </button>
+
+        <div
+        class="game-message"
+          class="game-message"
+        ></div>
+
+      </div>
+    `;
+  }
+
+  if (game.type === "fourPics") {
+
+    return `
+      <div class="game-box">
+
+        <div class="eyebrow">
+          Interactive Game
+        </div>
+
+        <h3>
+          4 Pics 1 Word
+        </h3>
+
+        <div class="four-pics-grid">
+
+          ${(game.images || [])
+            .slice(0, 4)
+            .map(
+              image => `
+                <img
+                  src="${escapeAttr(image)}"
+                  alt="Game image"
+                  class="game-image"
+                >
+              `
+            )
+            .join("")}
+
+        </div>
+
+        ${
+          game.hint
+            ? `
+              <p class="small">
+                Hint: ${escapeHTML(game.hint)}
+              </p>
+            `
+            : ""
+        }
+
+        <input
+          id="game-answer"
+          class="game-input"
+          type="text"
+          autocomplete="off"
+          placeholder="What is the word?"
+        >
+
+        <button
+          id="game-submit"
+          class="primary-btn"
+          type="button"
+        >
+          Check Answer
+        </button>
+
+        <div
+          id="game-message"
+          class="game-message"
+        ></div>
+
+      </div>
+    `;
+  }
+
+  if (game.type === "crossword") {
+
+    return `
+      <div class="game-box">
+
+        <div class="eyebrow">
+          Interactive Game
+        </div>
+
+        <h3>
+          Mini Crossword
+        </h3>
+
+        <p class="small">
+          Solve the clue below.
+        </p>
+
+        <div class="crossword-clue">
+          ${escapeHTML(game.clue || "")}
+        </div>
+
+        <input
+          id="game-answer"
+          class="game-input"
+          type="text"
+          autocomplete="off"
+          placeholder="Type your answer"
+        >
+
+        <button
+          id="game-submit"
+          class="primary-btn"
+          type="button"
+        >
+          Check Answer
+        </button>
+
+        <div
+          id="game-message"
+          class="game-message"
+        ></div>
+
+      </div>
+    `;
+  }
+
+  return "";
+}
 
 function renderArticleSection(article, sectionIndex) {
 
@@ -378,27 +938,30 @@ function renderArticleSection(article, sectionIndex) {
   const progressPercent =
     ((sectionIndex + 1) / sections.length) * 100;
 
-  function renderQuiz(article) {
+ function renderQuiz(article) {
+
   document.querySelector("#app").innerHTML = `
     <div class="topbar">
 
       <div class="progress-wrap">
 
         <div class="progress-label">
+
           <span>
-            Reading stage
+            Quiz progress
           </span>
 
           <span>
-            ${sectionIndex + 1} of ${sections.length}
+            5 questions
           </span>
+
         </div>
 
         <div class="progress-track">
 
           <div
             class="progress-fill"
-            style="width: ${progressPercent}%"
+            style="width: 100%"
           ></div>
 
         </div>
@@ -406,194 +969,88 @@ function renderArticleSection(article, sectionIndex) {
       </div>
 
       <div class="points">
-        +0 points
+        Up to 100 points
       </div>
 
     </div>
 
-    <article class="article-card card">
+    <form
+      id="quiz-form"
+      class="quiz-card card"
+    >
 
-      <div class="article-content">
-
-        <div class="eyebrow">
-          Set ${escapeHTML(session.set)}
-          · Assigned reading
-        </div>
-
-        <h2>
-          ${escapeHTML(article.title)}
-        </h2>
-
-        ${paragraphs.map(paragraph => `
-          <p class="article-body">
-            ${escapeHTML(paragraph)}
-          </p>
-        `).join("")}
-
-        <div class="action-row">
-
-          ${
-            isFinalSection
-              ? `
-                <button
-                  id="begin-quiz"
-                  class="primary-btn"
-                >
-                  Proceed to Final Quiz
-                </button>
-              `
-              : `
-                <button
-                  id="continue-section"
-                  class="primary-btn"
-                >
-                  Continue to Interactive Game
-                </button>
-              `
-          }
-
-        </div>
-
+      <div class="eyebrow">
+        Knowledge check
       </div>
 
-    </article>
+      <h2>
+        ${escapeHTML(article.title)}
+      </h2>
+
+      <p class="small">
+        Answer all five questions before submitting.
+      </p>
+
+      ${article.questions
+        .map(
+          (question, index) => `
+            <fieldset class="question">
+
+              <legend class="question-title">
+                ${index + 1}.
+                ${escapeHTML(question.text)}
+              </legend>
+
+              ${question.choices
+                .map(
+                  (choice, choiceIndex) => `
+                    <label class="choice">
+
+                      <input
+                        type="radio"
+                        name="question-${index}"
+                        value="${choiceIndex}"
+                        required
+                      >
+
+                      <span>
+                        ${escapeHTML(choice)}
+                      </span>
+
+                    </label>
+                  `
+                )
+                .join("")}
+
+            </fieldset>
+          `
+        )
+        .join("")}
+
+      <div id="quiz-message"></div>
+
+      <button
+        class="primary-btn"
+        type="submit"
+      >
+        Submit quiz
+      </button>
+
+    </form>
   `;
 
-  if (isFinalSection) {
-
-    document
-      .querySelector("#begin-quiz")
-      .addEventListener(
-        "click",
-        () => renderQuiz(article)
-      );
-
-  } else {
-
-    document
-      .querySelector("#continue-section")
-      .addEventListener(
-        "click",
-        () => renderInteractiveGame(
-          article,
-          sectionIndex
-        )
-      );
-
-  }
+  document
+    .querySelector("#quiz-form")
+    .addEventListener(
+      "submit",
+      event => submitQuiz(
+        event,
+        article
+      )
+    );
 }
 
-    document.querySelector("#app").innerHTML = `
-      <div class="topbar">
-
-        <div class="progress-wrap">
-
-          <div class="progress-label">
-
-            <span>
-              Quiz progress
-            </span>
-
-            <span>
-              2 of 2 · 5 questions
-            </span>
-
-          </div>
-
-          <div class="progress-track">
-
-            <div
-              class="progress-fill"
-              style="width: 100%"
-            ></div>
-
-          </div>
-
-        </div>
-
-        <div class="points">
-          Up to 100 points
-        </div>
-
-      </div>
-
-      <form
-        id="quiz-form"
-        class="quiz-card card"
-      >
-
-        <div class="eyebrow">
-          Knowledge check
-        </div>
-
-        <h2>
-          ${escapeHTML(article.title)}
-        </h2>
-
-        <p class="small">
-          Answer all five questions before submitting.
-        </p>
-
-        ${article.questions
-          .map(
-            (question, index) => `
-              <fieldset class="question">
-
-                <legend class="question-title">
-                  ${index + 1}.
-                  ${escapeHTML(question.text)}
-                </legend>
-
-                ${question.choices
-                  .map(
-                    (choice, choiceIndex) => `
-                      <label class="choice">
-
-                        <input
-                          type="radio"
-                          name="question-${index}"
-                          value="${choiceIndex}"
-                          required
-                        >
-
-                        <span>
-                          ${escapeHTML(choice)}
-                        </span>
-
-                      </label>
-                    `
-                  )
-                  .join("")}
-
-              </fieldset>
-            `
-          )
-          .join("")}
-
-        <div id="quiz-message"></div>
-
-        <button
-          class="primary-btn"
-          type="submit"
-        >
-          Submit quiz
-        </button>
-
-      </form>
-    `;
-
-    document
-      .querySelector("#quiz-form")
-      .addEventListener(
-        "submit",
-        event => submitQuiz(
-          event,
-          article
-        )
-      );
-  }
-
-  async function submitQuiz(
+async function submitQuiz(
     event,
     article
   ) {
